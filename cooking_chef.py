@@ -8,7 +8,7 @@ class Chef:
         self.__position = (0, 0)
         self.chef_sprite = pg.image.load("images/Walk (1).png")  # Load the image as a surface
         self.chef_sprite = pg.transform.scale(self.chef_sprite, (
-        Config.get('GRID_SIZE'), Config.get('GRID_SIZE')))  # Optional scaling if needed
+            Config.get('CHARACTER_SIZE'), Config.get('CHARACTER_SIZE')))  # Optional scaling if needed
         self.add_walk_images()
 
         # Create a rect for managing the sprite's position

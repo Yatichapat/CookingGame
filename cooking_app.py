@@ -13,33 +13,64 @@ class GameApp:
         self.__chef.set_screen(self.__screen)
         self.__clock = pg.time.Clock()
         self.__running = True
-        self.__dict_keys = {pg.K_UP: 'UP',
-                            pg.K_DOWN: 'DOWN',
-                            pg.K_LEFT: 'LEFT',
-                            pg.K_RIGHT: 'RIGHT'}
+        self.__speed = 0
 
-    def __user_event(self):
-        for ev in pg.event.get():
-            if ev.type == pg.QUIT:
-                pg.quit()
+        self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
+
+    def handle_events(self):
+        """Handle user input"""
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
                 self.__running = False
-            elif ev.type == pg.KEYDOWN:
-                if ev.key == pg.K_UP:
-                    self.__chef.move_up()
-                elif ev.key == pg.K_DOWN:
-                    self.__chef.move_down()
-                elif ev.key == pg.K_LEFT:
-                    self.__chef.move_left()
-                elif ev.key == pg.K_RIGHT:
-                    self.__chef.move_right()
 
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_UP:
+                    self.movement['UP'] = True
+                elif event.key == pg.K_DOWN:
+                    self.movement['DOWN'] = True
+                elif event.key == pg.K_LEFT:
+                    self.movement['LEFT'] = True
+                elif event.key == pg.K_RIGHT:
+                    self.movement['RIGHT'] = True
+
+            elif event.type == pg.KEYUP:
+                if event.key == pg.K_UP:
+                    self.movement['UP'] = False
+                elif event.key == pg.K_DOWN:
+                    self.movement['DOWN'] = False
+                elif event.key == pg.K_LEFT:
+                    self.movement['LEFT'] = False
+                elif event.key == pg.K_RIGHT:
+                    self.movement['RIGHT'] = False
+
+    def update(self):
+        """Update game logic"""
+        self.__speed += 1
+        if self.__speed % 5 == 0:
+            if self.movement['UP']:
+                self.__chef.move_up()
+            if self.movement['DOWN']:
+                self.__chef.move_down()
+            if self.movement['LEFT']:
+                self.__chef.move_left()
+            if self.movement['RIGHT']:
+                self.__chef.move_right()
+
+    def render(self):
+        """Render game objects"""
+        self.__screen.fill(Config.get('WHITE'))  # Clear screen
+        self.__screen.blit(self.__chef.chef_sprite, self.__chef.chef_rect)  # Draw chef
+        pg.display.flip()
 
     def run(self):
         while self.__running:
-            self.__user_event()
+            self.handle_events()
+            self.update()
+            self.render()
             pg.display.flip()
             self.__clock.tick(Config.get('FPS'))
         pg.quit()
+
 
 if __name__ == '__main__':
     app = GameApp()

@@ -1,3 +1,6 @@
+import pygame as pg
+
+
 class Config:
     __ALL_CONFIGS = {
         'WIN_SIZE_W': 1280,
@@ -8,6 +11,8 @@ class Config:
         'FPS': 60,
         'BLACK': (0, 0, 0),
         'WHITE': (255, 255, 255),
+        'BACKGROUND': (0, 0, 0),
+        'CHARACTER_SIZE': 100
 
     }
 
