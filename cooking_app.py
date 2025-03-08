@@ -1,6 +1,7 @@
 import pygame as pg
 from cooking_config import Config
 from cooking_chef import Chef
+from cooking_zombie import Zombie
 
 
 class GameApp:
@@ -8,13 +9,16 @@ class GameApp:
         pg.init()
         pg.display.set_caption('Apocalypse Cooker')
         self.__screen = pg.display.set_mode((Config.get('WIN_SIZE_W'), Config.get('WIN_SIZE_H')))
-        self.__screen.fill(Config.get('WHITE'))
+        # self.__screen.fill(Config.get('WHITE'))
+
         self.__chef = Chef()
+        self.__zombie = Zombie()
+
         self.__chef.set_screen(self.__screen)
+        self.__zombie.set_screen(self.__screen)
+
         self.__clock = pg.time.Clock()
         self.__running = True
-        self.__last_move_time = 0
-        self.__speed = 0
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
     def handle_events(self):
@@ -46,18 +50,20 @@ class GameApp:
     def update(self):
         """Update game logic"""
         self.__chef.move()
+        self.__zombie.wander()
 
     def render(self):
         """Render game objects"""
-        self.__screen.fill(Config.get('WHITE'))  # Clear screen
-        self.__screen.blit(self.__chef.chef_sprite, self.__chef.chef_rect)  # Draw chef
+        # self.__screen.fill(Config.get('WHITE'))  # Clear screen
+        self.__chef.draw()
+        self.__zombie.draw()
         pg.display.flip()
 
     def run(self):
         while self.__running:
+            self.render()
             self.handle_events()
             self.update()
-            self.render()
             self.__clock.tick(Config.get('FPS'))
         pg.quit()
 

@@ -8,7 +8,7 @@ class Config:
         'GRID_SIZE': 32,
         'GRID_COUNT_W': 64,
         'GRID_COUNT_H': 33,
-        'FPS': 60,
+        'FPS': 50,
         'BLACK': (0, 0, 0),
         'WHITE': (255, 255, 255),
         'BACKGROUND': (0, 0, 0),
