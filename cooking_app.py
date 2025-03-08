@@ -54,7 +54,7 @@ class GameApp:
 
     def render(self):
         """Render game objects"""
-        # self.__screen.fill(Config.get('WHITE'))  # Clear screen
+        self.__screen.fill(Config.get('WHITE'))  # Clear screen
         self.__chef.draw()
         self.__zombie.draw()
         pg.display.flip()
@@ -64,7 +64,7 @@ class GameApp:
             self.render()
             self.handle_events()
             self.update()
-            self.__clock.tick(Config.get('FPS'))
+            self.__clock.tick(Config.get('FPS_Z'))
         pg.quit()
 
 

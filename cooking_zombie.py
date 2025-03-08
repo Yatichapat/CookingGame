@@ -5,8 +5,8 @@ import random
 
 class Zombie:
     def __init__(self):
-        self.__position = (random.randint(0, Config.get('GRID_COUNT_W') - 1),
-                           random.randint(0, Config.get('GRID_COUNT_H') - 1))
+        self.__position = (random.randint(0, Config.get('WIN_SIZE_W') - 1),
+                           random.randint(0, Config.get('WIN_SIZE_H') - 1))
 
         try:
             self.__walk_image = pg.image.load("images/Zombie_1/Walk.png")
@@ -14,9 +14,9 @@ class Zombie:
             print("Error loading image:", e)
             exit()
 
-        self.frame_width = 32
-        self.frame_height = 32
-        self.total_frames = 6
+        self.frame_width = 128
+        self.frame_height = 128
+        self.total_frames = 10
 
         self.frames = [
             pg.transform.scale(
@@ -33,15 +33,15 @@ class Zombie:
 
         self.speed = 2
         self.direction = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
-        self.time_to_change_direction = random.randint(50, 150)
-        self.time_to_pause_after_change = random.randint(10, 30)
+        self.time_to_change_direction = random.randint(300, 600)
+        self.time_to_pause_after_change = random.randint(400, 600)
 
     def wander(self):
         """Move the zombie randomly"""
         if self.time_to_change_direction <= 0:
             self.direction = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
-            self.time_to_change_direction = random.randint(50, 150)
-            self.time_to_pause_after_change = random.randint(10, 30)
+            self.time_to_change_direction = random.randint(10, 50)
+            self.time_to_pause_after_change = random.randint(5, 20)
         else:
             self.time_to_change_direction -= 1
 
