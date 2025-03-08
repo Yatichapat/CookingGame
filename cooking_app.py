@@ -13,8 +13,8 @@ class GameApp:
         self.__chef.set_screen(self.__screen)
         self.__clock = pg.time.Clock()
         self.__running = True
+        self.__last_move_time = 0
         self.__speed = 0
-
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
     def handle_events(self):
@@ -25,36 +25,27 @@ class GameApp:
 
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_UP:
-                    self.movement['UP'] = True
+                    self.__chef.movement['UP'] = True
                 elif event.key == pg.K_DOWN:
-                    self.movement['DOWN'] = True
+                    self.__chef.movement['DOWN'] = True
                 elif event.key == pg.K_LEFT:
-                    self.movement['LEFT'] = True
+                    self.__chef.movement['LEFT'] = True
                 elif event.key == pg.K_RIGHT:
-                    self.movement['RIGHT'] = True
+                    self.__chef.movement['RIGHT'] = True
 
             elif event.type == pg.KEYUP:
                 if event.key == pg.K_UP:
-                    self.movement['UP'] = False
+                    self.__chef.movement['UP'] = False
                 elif event.key == pg.K_DOWN:
-                    self.movement['DOWN'] = False
+                    self.__chef.movement['DOWN'] = False
                 elif event.key == pg.K_LEFT:
-                    self.movement['LEFT'] = False
+                    self.__chef.movement['LEFT'] = False
                 elif event.key == pg.K_RIGHT:
-                    self.movement['RIGHT'] = False
+                    self.__chef.movement['RIGHT'] = False
 
     def update(self):
         """Update game logic"""
-        self.__speed += 1
-        if self.__speed % 5 == 0:
-            if self.movement['UP']:
-                self.__chef.move_up()
-            if self.movement['DOWN']:
-                self.__chef.move_down()
-            if self.movement['LEFT']:
-                self.__chef.move_left()
-            if self.movement['RIGHT']:
-                self.__chef.move_right()
+        self.__chef.move()
 
     def render(self):
         """Render game objects"""
@@ -67,7 +58,6 @@ class GameApp:
             self.handle_events()
             self.update()
             self.render()
-            pg.display.flip()
             self.__clock.tick(Config.get('FPS'))
         pg.quit()
 

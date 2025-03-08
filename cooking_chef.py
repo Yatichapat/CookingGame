@@ -1,72 +1,83 @@
 import pygame as pg
-from pygame_functions import *
 from cooking_config import Config
 
 
 class Chef:
     def __init__(self):
-        self.__position = (0, 0)
-        self.chef_sprite = pg.image.load("images/Walk (1).png")  # Load the image as a surface
-        self.chef_sprite = pg.transform.scale(self.chef_sprite, (
-            Config.get('CHARACTER_SIZE'), Config.get('CHARACTER_SIZE')))  # Optional scaling if needed
-        self.add_walk_images()
+        self.__position = (Config.get('WIN_SIZE_W') // 2, Config.get('WIN_SIZE_H') // 2)  # Starting position at center
 
-        # Create a rect for managing the sprite's position
+        self.walk_images = []
+        self.idle_images = []  # To store idle images
+        self.current_frame = 0
+        self.add_walk_images()
+        self.add_idle_images()  # Add idle images
+
+        self.chef_sprite = self.idle_images[self.current_frame]  # Default to idle sprite
         self.chef_rect = self.chef_sprite.get_rect()
+        self.chef_rect.center = self.__position
+
+        self.speed = 4
+
+        self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
+        self.screen = None
+        self.facing_left = None
 
     def add_walk_images(self):
         """Add walking images for animation"""
-        self.walk_images = []
         for i in range(1, 16):
             image = pg.image.load(f"images/Walk ({i}).png")
-            image = pg.transform.scale(image, (Config.get('GRID_SIZE'), Config.get('GRID_SIZE')))  # Optional scaling
+            image = pg.transform.scale(image, (Config.get('CHARACTER_SIZE'), Config.get('CHARACTER_SIZE')))
             self.walk_images.append(image)
 
-    def move(self, direction):
-        """Move the chef in a specific direction"""
-        x, y = self.__position
-        if direction == 'UP':
-            y -= 1
-        elif direction == 'DOWN':
-            y += 1
-        elif direction == 'LEFT':
-            x -= 1
-        elif direction == 'RIGHT':
-            x += 1
+    def add_idle_images(self):
+        """Add idle images for standing still animation"""
+        for i in range(1, 6):  # Assuming there are 5 idle frames
+            image = pg.image.load(f"images/Idle ({i}).png")
+            image = pg.transform.scale(image, (Config.get('CHARACTER_SIZE'), Config.get('CHARACTER_SIZE')))
+            self.idle_images.append(image)
 
-        # Ensure the chef doesn't move off-screen
-        max_x = Config.get('WIN_SIZE_W') // Config.get('GRID_SIZE')
-        max_y = Config.get('WIN_SIZE_H') // Config.get('GRID_SIZE')
+    def move(self):
+        # Update the animation based on movement
+        if self.movement['UP']:
+            self.chef_rect.y -= self.speed
+            self.update_sprite(self.walk_images, flip=self.facing_left)
 
-        if 0 <= x < max_x and 0 <= y < max_y:
-            self.__position = (x, y)
-            self.update_sprite_position()
+        elif self.movement['DOWN']:
+            self.chef_rect.y += self.speed
+            self.update_sprite(self.walk_images, flip=self.facing_left)
 
-    def move_up(self):
-        """Move up"""
-        self.move('UP')
+        elif self.movement['LEFT']:
+            self.chef_rect.x -= self.speed
+            self.update_sprite(self.walk_images, flip=True)
+            self.facing_left = True
 
-    def move_down(self):
-        """Move down"""
-        self.move('DOWN')
+        elif self.movement['RIGHT']:
+            self.chef_rect.x += self.speed
+            self.update_sprite(self.walk_images)
+            self.facing_left = False
 
-    def move_left(self):
-        """Move left"""
-        self.move('LEFT')
+        else:
+            # If no movement, use the idle animation
+            self.update_sprite(self.idle_images, flip=self.facing_left)
 
-    def move_right(self):
-        """Move right"""
-        self.move('RIGHT')
+    def update_sprite(self, sprite_list, flip=False):
+        """Update the sprite animation"""
+        self.current_frame = (self.current_frame + 1) % len(sprite_list)
+        sprite = sprite_list[self.current_frame]
+
+        if flip:
+            self.chef_sprite = pg.transform.flip(sprite, True, False)
+        else:
+            self.chef_sprite = sprite
+
+    def animate_walk(self):
+        """Animate walking by cycling through frames"""
+        self.current_frame = (self.current_frame + 1) % len(self.walk_images)
+        self.chef_sprite = self.walk_images[self.current_frame]
 
     def update_sprite_position(self):
-        """Update the sprite's position on the screen"""
-        x, y = self.__position
-        # Update the rect to move the sprite
-        self.chef_rect.topleft = (x * Config.get('GRID_SIZE'), y * Config.get('GRID_SIZE'))
-        # Clear the previous screen and draw the new sprite
-
-        self.screen.blit(self.chef_sprite, self.chef_rect)
-        pg.display.flip()
+        if self.screen:
+            self.screen.blit(self.chef_sprite, self.chef_rect)
 
     def get_position(self):
         """Get the current position of the chef"""
