@@ -17,6 +17,7 @@ class Ingredients:
                                        (Config.get('GRID_SIZE_W') * 2, Config.get('GRID_SIZE_W') * 2)),
             "leek": pg.transform.scale(pg.image.load("images/FarmVeggies/Leek.png"),
                                        (Config.get('GRID_SIZE_W') * 2, Config.get('GRID_SIZE_W') * 2))
+
         }
         return image_map.get(ingredient_type, pg.Surface((50, 50)))
 
@@ -38,7 +39,7 @@ class Ingredients:
 class Menu:
     def __init__(self):
         self.__ingredients = [
-            Ingredients(2, 10, "pork"),
+            Ingredients(10, 10, "pork"),
             Ingredients(4, 10, "bread"),
             Ingredients(6, 10, "leek")
         ]
@@ -90,17 +91,14 @@ class Fridge:
             return self.__ingredients.pop(self.__select_index)
         return None
 
-    def drop_ingredient(self, chef):
+    def drop_ingredient_in_fridge(self, chef):
         """Drop the currently selected ingredient at the chef's position."""
-        if self.is_open:
-            if len(self.__ingredients) > 0:
-                ingredient = self.__ingredients[self.__select_index]
-                ingredient.set_position(self.__position)  # Drop it where the chef is
-                self.add_dropped_ingredient(ingredient)  # Add the dropped ingredient to the world
-                self.__ingredients.append(ingredient)
-                self.__select_index = 0
-        else:
-            pass
+        if self.is_open and self.__ingredients:
+            ingredient = self.__ingredients[self.__select_index]
+            ingredient.set_position(self.__position)  # Drop it where the chef is
+
+            self.__ingredients.append(ingredient)
+            self.__select_index = max(0, len(self.__ingredients) + 1)
 
     def draw(self, screen):
         """Draws the fridge and its ingredients if open."""

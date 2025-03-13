@@ -33,43 +33,24 @@ class Zombie:
         self.zombie_sprite = self.idle_frames[0]
 
         self.speed = 2
-        self.direction = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
-        self.time_to_change_direction = random.randint(1, 5)
-        self.time_to_pause_after_change = random.randint(10, 200)
+        self.chasing = False
 
-    def move(self):
-        """Move the zombie while keeping it inside the grid"""
-        grid_w, grid_h = Config.get('GRID_COUNT_W'), Config.get('GRID_COUNT_H')
-        char_size = Config.get('CHARACTER_SIZE')
+    def move_towards(self, target_x, target_y):
+        """Move towards a given (x, y) target."""
+        dx = target_x - self.zombie_rect.x
+        dy = target_y - self.zombie_rect.y
+        distance = max(1, (dx**2 + dy**2) ** 0.5)  # Prevent division by zero
 
-        new_x, new_y = self.zombie_rect.x, self.zombie_rect.y
+        # Normalize direction and apply speed
+        self.zombie_rect.x += self.speed * (dx / distance)
+        self.zombie_rect.y += self.speed * (dy / distance)
+        self.__position = (self.zombie_rect.x, self.zombie_rect.y)
 
-        if self.direction == 'UP':
-            new_y = max(0, self.zombie_rect.y - self.speed)
-        elif self.direction == 'DOWN':
-            new_y = min(grid_h * char_size - self.zombie_rect.height, self.zombie_rect.y + self.speed)
-        elif self.direction == 'LEFT':
-            new_x = max(0, self.zombie_rect.x - self.speed)
-        elif self.direction == 'RIGHT':
-            new_x = min(grid_w * char_size - self.zombie_rect.width, self.zombie_rect.x + self.speed)
-
-        # Apply the updated position
-        self.zombie_rect.x, self.zombie_rect.y = new_x, new_y
-        self.__position = (new_x, new_y)
-
-    def wander(self):
-        """Move the zombie randomly, changing direction if needed"""
-        if self.time_to_pause_after_change > 0:
-            self.time_to_pause_after_change -= 1
-        elif self.time_to_change_direction > 0:
-            self.time_to_change_direction -= 1
-            self.move()
-        else:
-            self.direction = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
-            self.time_to_change_direction = random.randint(50, 150)
-            self.time_to_pause_after_change = random.randint(10, 30)
-
-        self.move()
+    def chase_player(self, player):
+        """Make the zombie chase the player."""
+        player_x, player_y = player.get_position()
+        self.move_towards(player_x, player_y)
+        self.chasing = True
 
     def get_position(self):
         """Get the current position of the zombie"""

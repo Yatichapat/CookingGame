@@ -21,6 +21,7 @@ class GameApp:
         self.__chef.set_screen(self.__screen)
         self.__zombie.set_screen(self.__screen)
         self.__held_ingredient = None
+        self.__dropped_ingredient = []
 
         self.__clock = pg.time.Clock()
         self.__running = True
@@ -44,8 +45,12 @@ class GameApp:
                     elif event.key == pg.K_RETURN:  # Pick ingredient
                         if self.__held_ingredient is None:
                             self.__held_ingredient = self.__fridge.pick_ingredient()
-                elif event.key == pg.K_RETURN and self.__held_ingredient is not None:  # Drop ingredient
-                    self.drop_food()
+                        elif self.__held_ingredient and self.__fridge.is_open:
+                            self.__fridge.drop_ingredient_in_fridge(self.__held_ingredient)
+                            self.__held_ingredient = None
+
+                elif event.key == pg.K_RETURN and self.__held_ingredient and self.__fridge.is_open is False:
+                    self.drop_food_to_the_world()
 
                 elif event.key == pg.K_UP:
                     self.__chef.movement['UP'] = True
@@ -66,19 +71,19 @@ class GameApp:
                 elif event.key == pg.K_RIGHT:
                     self.__chef.movement['RIGHT'] = False
 
-    def drop_food(self):
+    def drop_food_to_the_world(self):
         """Drop the held ingredient"""
         if self.__held_ingredient:
             dropped_food = self.__held_ingredient
             dropped_food.set_position(self.__chef.get_position())
 
-            self.__fridge.add_dropped_ingredient(dropped_food)
+            self.__dropped_ingredient.append(dropped_food)
             self.__held_ingredient = None
 
     def update(self):
         """Update game logic"""
         self.__chef.move()
-        self.__zombie.wander()
+        self.__zombie.chase_player(self.__chef)
 
     def render(self):
         """Render game objects"""
@@ -88,6 +93,10 @@ class GameApp:
         self.__fridge.draw(self.__screen)
         if self.__held_ingredient:
             self.__screen.blit(self.__held_ingredient.images, self.__chef.get_position())
+
+        for ingredient in self.__dropped_ingredient:
+            x, y = ingredient.get_position()
+            ingredient.draw_at(self.__screen, x + 10, y)
 
         pg.display.flip()
 
