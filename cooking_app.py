@@ -46,7 +46,7 @@ class GameApp:
                         if self.__held_ingredient is None:
                             self.__held_ingredient = self.__fridge.pick_ingredient()
                         elif self.__held_ingredient and self.__fridge.is_open:
-                            self.__fridge.drop_ingredient_in_fridge(self.__held_ingredient)
+                            self.__fridge.put_ingredient_in_fridge(self.__held_ingredient)
                             self.__held_ingredient = None
 
                 elif event.key == pg.K_RETURN and self.__held_ingredient and self.__fridge.is_open is False:

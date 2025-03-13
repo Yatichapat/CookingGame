@@ -88,17 +88,17 @@ class Fridge:
     def pick_ingredient(self):
         """Returns the currently selected ingredient for pickup."""
         if self.is_open and self.__ingredients:
-            return self.__ingredients.pop(self.__select_index)
+            ingredient = self.__ingredients.pop(self.__select_index)
+            if self.__select_index >= len(self.__ingredients):
+                self.__select_index = len(self.__ingredients)
+            return ingredient
         return None
 
-    def drop_ingredient_in_fridge(self, chef):
-        """Drop the currently selected ingredient at the chef's position."""
-        if self.is_open and self.__ingredients:
-            ingredient = self.__ingredients[self.__select_index]
-            ingredient.set_position(self.__position)  # Drop it where the chef is
-
-            self.__ingredients.append(ingredient)
-            self.__select_index = max(0, len(self.__ingredients) + 1)
+    def put_ingredient_in_fridge(self, ingredient):
+        """Puts the ingredient back into the fridge."""
+        if self.is_open:
+            self.__ingredients.append(ingredient)  # Add the ingredient back to the fridge
+            ingredient.set_position(self.__position)
 
     def draw(self, screen):
         """Draws the fridge and its ingredients if open."""
