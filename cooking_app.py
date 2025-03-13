@@ -22,8 +22,7 @@ class GameApp:
         self.__zombie.set_screen(self.__screen)
         self.__held_ingredient = None
 
-        self.__clock_z = pg.time.Clock()
-        self.__clock_chef = pg.time.Clock()
+        self.__clock = pg.time.Clock()
         self.__running = True
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
@@ -45,9 +44,8 @@ class GameApp:
                     elif event.key == pg.K_RETURN:  # Pick ingredient
                         if self.__held_ingredient is None:
                             self.__held_ingredient = self.__fridge.pick_ingredient()
-                    elif event.key == pg.K_RETURN and self.__held_ingredient is not None:  # Drop ingredient
-                        if self.__held_ingredient:
-                            self.drop_food()
+                elif event.key == pg.K_RETURN and self.__held_ingredient is not None:  # Drop ingredient
+                    self.drop_food()
 
                 elif event.key == pg.K_UP:
                     self.__chef.movement['UP'] = True
@@ -67,7 +65,6 @@ class GameApp:
                     self.__chef.movement['LEFT'] = False
                 elif event.key == pg.K_RIGHT:
                     self.__chef.movement['RIGHT'] = False
-
 
     def drop_food(self):
         """Drop the held ingredient"""
@@ -99,7 +96,7 @@ class GameApp:
             self.render()
             self.handle_events()
             self.update()
-            self.__clock_chef.tick(Config.get('FPS'))
+            self.__clock.tick(Config.get('FPS'))
         pg.quit()
 
 

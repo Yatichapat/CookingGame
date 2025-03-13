@@ -1,6 +1,5 @@
 from cooking_config import Config
 import pygame as pg
-import math
 
 
 class Ingredients:
@@ -24,8 +23,8 @@ class Ingredients:
     def get_position(self):
         return self.__position
 
-    def set_position(self, x, y):
-        self.__position = (x, y)
+    def set_position(self, position):
+        self.__position = position
 
     def draw(self, screen):
         """Draw ingredient at its default position."""
@@ -43,6 +42,7 @@ class Menu:
             Ingredients(4, 10, "bread"),
             Ingredients(6, 10, "leek")
         ]
+
     def draw(self, screen):
         for ingredient in self.__ingredients:
             ingredient.draw(screen)
@@ -72,8 +72,6 @@ class Fridge:
 
         if distance <= 200:
             self.is_open = not self.is_open
-        else:
-            print("Too far from the fridge!")
 
     def move_selection(self, direction):
         """Moves selection up/down in the fridge."""
@@ -92,6 +90,18 @@ class Fridge:
             return self.__ingredients.pop(self.__select_index)
         return None
 
+    def drop_ingredient(self, chef):
+        """Drop the currently selected ingredient at the chef's position."""
+        if self.is_open:
+            if len(self.__ingredients) > 0:
+                ingredient = self.__ingredients[self.__select_index]
+                ingredient.set_position(self.__position)  # Drop it where the chef is
+                self.add_dropped_ingredient(ingredient)  # Add the dropped ingredient to the world
+                self.__ingredients.append(ingredient)
+                self.__select_index = 0
+        else:
+            pass
+
     def draw(self, screen):
         """Draws the fridge and its ingredients if open."""
         fridge_rect = pg.Rect(30, 30, 50, 90)  # Example fridge size
@@ -102,3 +112,8 @@ class Fridge:
                 ingredient_x = 70 + (i * Config.get('GRID_SIZE_H') * 1.5)
                 ingredient_y = 60
                 ingredient.draw_at(screen, ingredient_x, ingredient_y)
+
+        for ingredient in self.__dropped_ingredients:
+            ingredient.draw_at(screen, ingredient.get_position()[0] * Config.get('GRID_SIZE_W'),
+                               ingredient.get_position()[1] * Config.get('GRID_SIZE_H'))
+
