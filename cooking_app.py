@@ -2,7 +2,8 @@ import pygame as pg
 from cooking_config import Config
 from cooking_chef import Chef
 from cooking_zombie import Zombie
-from cooking_ingredients import Menu, Fridge
+from cooking_ingredients import *
+from cooking_tool import *
 
 
 class GameApp:
@@ -15,8 +16,10 @@ class GameApp:
         self.__chef = Chef()
 
         self.__zombie = Zombie(pg.image.load("images/Zombie_1/Idle.png"))
-        self.__menu = Menu()
+
         self.__fridge = Fridge(10, 10, self.__chef)
+        self.__pan = Pan()
+        self.__plate = Plate(600, 50)
 
         self.__chef.set_screen(self.__screen)
         self.__zombie.set_screen(self.__screen)
@@ -45,12 +48,22 @@ class GameApp:
                     elif event.key == pg.K_RETURN:  # Pick ingredient
                         if self.__held_ingredient is None:
                             self.__held_ingredient = self.__fridge.pick_ingredient()
+
                         elif self.__held_ingredient and self.__fridge.is_open:
                             self.__fridge.put_ingredient_in_fridge(self.__held_ingredient)
                             self.__held_ingredient = None
 
                 elif event.key == pg.K_RETURN and self.__held_ingredient and self.__fridge.is_open is False:
-                    self.drop_food_to_the_world()
+                    if self.is_near_pan():
+                        self.__pan.put_ingredient_in_pan(self.__held_ingredient)
+                        self.__pan.fry_ingredients()
+                        self.__held_ingredient = None
+                    elif self.is_near_pan() and self.__held_ingredient is None:
+                        cooked_ingredients = self.__pan.get_cooked_ingredients()
+                        self.__held_ingredient = cooked_ingredients.pop()
+
+                    else:
+                        self.drop_food_to_the_world()
 
                 elif event.key == pg.K_UP:
                     self.__chef.movement['UP'] = True
@@ -80,23 +93,36 @@ class GameApp:
             self.__dropped_ingredient.append(dropped_food)
             self.__held_ingredient = None
 
+    def is_near_pan(self):
+        if self.__held_ingredient is None:
+            chef_x, chef_y = self.__chef.get_position()
+            pan_x, pan_y = self.__pan.get_position()
+
+            distance = ((chef_x - pan_x) ** 2 + (chef_y - pan_y) ** 2) ** 0.5
+            return distance < 100
+
     def update(self):
         """Update game logic"""
         self.__chef.move()
         self.__zombie.chase_player(self.__chef)
+        self.__pan.fry_ingredients()
 
     def render(self):
         """Render game objects"""
         self.__screen.fill(Config.get('WHITE'))  # Clear screen
-        self.__chef.draw()
-        self.__zombie.draw()
+
         self.__fridge.draw(self.__screen)
+        self.__plate.draw(self.__screen)
+        self.__pan.draw(self.__screen)
         if self.__held_ingredient:
             self.__screen.blit(self.__held_ingredient.images, self.__chef.get_position())
 
         for ingredient in self.__dropped_ingredient:
             x, y = ingredient.get_position()
             ingredient.draw_at(self.__screen, x + 10, y)
+
+        self.__chef.draw()
+        self.__zombie.draw()
 
         pg.display.flip()
 

@@ -3,8 +3,8 @@ import pygame as pg
 
 class Config:
     __ALL_CONFIGS = {
-        'WIN_SIZE_W': 1280,
-        'WIN_SIZE_H': 660,
+        'WIN_SIZE_W': 1000,
+        'WIN_SIZE_H': 630,
         'GRID_SIZE_W': 22,
         'GRID_SIZE_H': 44,
         'GRID_COUNT_W': 64,
