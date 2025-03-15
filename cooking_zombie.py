@@ -5,8 +5,8 @@ import random
 
 class Zombie:
     def __init__(self, idle_image):
-        self.__position = (random.randint(0, Config.get('WIN_SIZE_W') - 1),
-                           random.randint(0, Config.get('WIN_SIZE_H') - 1))
+        self.__position = (random.randint(0, Config.get_config('WIN_SIZE_W') - 1),
+                           random.randint(0, Config.get_config('WIN_SIZE_H') - 1))
         self.screen = None
 
         # Load idle sprite sheet
@@ -21,7 +21,7 @@ class Zombie:
         self.idle_frames = [
             pg.transform.scale(
                 self.__idle_image.subsurface(i * self.frame_width_idle, 0, self.frame_width_idle, self.frame_height_idle),
-                (Config.get('CHARACTER_SIZE') + 10, Config.get('CHARACTER_SIZE') + 10)
+                (Config.get_config('CHARACTER_SIZE') + 10, Config.get_config('CHARACTER_SIZE') + 10)
             )
             for i in range(self.total_frames_idle)
         ]

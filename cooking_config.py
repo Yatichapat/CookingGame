@@ -16,11 +16,49 @@ class Config:
         'RED': (255, 0, 0),
         'BROWN': (165, 42, 42),
         'GRAY': (128, 128, 128),
-        'BACKGROUND': (0, 0, 0),
-        'CHARACTER_SIZE': 100
-
+        'BACKGROUND': (249, 234, 211),
+        'CHARACTER_SIZE': 100,
+        'MESSAGE_BACKGROUND': pg.transform.scale(pg.image.load("images/message.png"),(200, 200))
     }
 
+    __IMAGE_CACHE = {}
+
     @classmethod
-    def get(cls, key, default=None):
-        return cls.__ALL_CONFIGS[key]
+    def get_config(cls, key, default=None):
+        return cls.__ALL_CONFIGS.get(key, default)
+
+    @classmethod
+    def load_images(cls):
+        """Pre-loads and caches all ingredient images."""
+        image_paths = {
+            "lamb": "images/simply cooked/Raw food/lamb3.png",
+            "lamb_cooked": "images/simply cooked/Cooked food/lamb1.png",
+            "bread": "images/simply cooked/Cooked food/bread1.png",
+            "leek": "images/FarmVeggies/Leek.png",
+            "egg": "images/simply cooked/Raw food/egg3.png",
+            "egg_fried": "images/simply cooked/Cooked food/egg1.png",
+            "chicken": "images/simply cooked/Raw food/chiken3.png",
+            "chicken_cooked": "images/simply cooked/Cooked food/chiken1.png",
+            "sandwich": "images/simply cooked/Cooked food/sandwich1.png",
+        }
+
+        for ingredient, path in image_paths.items():
+            try:
+                image = pg.image.load(path)
+                scaled_image = pg.transform.scale(
+                    image,
+                    (cls.get_config('GRID_SIZE_W') * 2, cls.get_config('GRID_SIZE_W') * 2)
+                )
+                cls.__IMAGE_CACHE[ingredient] = scaled_image
+            except FileNotFoundError:
+                print(f"Warning: Image not found for {ingredient}, using placeholder.")
+                cls.__IMAGE_CACHE[ingredient] = pg.Surface((50, 50))  # Placeholder
+
+    @classmethod
+    def get_image(cls, ingredient_type):
+        """Retrieve an image from the cache."""
+        return cls.__IMAGE_CACHE.get(ingredient_type, pg.Surface((50, 50)))  # Default placeholder
+
+
+# Ensure images are loaded before using them
+Config.load_images()

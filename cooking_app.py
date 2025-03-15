@@ -10,15 +10,16 @@ class GameApp:
     def __init__(self):
         pg.init()
         pg.display.set_caption('Apocalypse Cooker')
-        self.__screen = pg.display.set_mode((Config.get('WIN_SIZE_W'), Config.get('WIN_SIZE_H')))
+        self.__screen = pg.display.set_mode((Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))
         # self.__screen.fill(Config.get('WHITE'))
 
         self.__chef = Chef()
 
         self.__zombie = Zombie(pg.image.load("images/Zombie_1/Idle.png"))
 
-        self.__fridge = Fridge(10, 10, self.__chef)
-        self.__pan = Pan()
+        self.__fridge = Fridge(200, 20, self.__chef)
+        self.__pan = Pan(500, 50)
+        self.__pot = Pot(800, 50)
         self.__plate = Plate(600, 50)
 
         self.__chef.set_screen(self.__screen)
@@ -28,6 +29,7 @@ class GameApp:
 
         self.__clock = pg.time.Clock()
         self.__running = True
+        self.__menu = Menu()
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
     def handle_events(self):
@@ -59,8 +61,8 @@ class GameApp:
                         self.__pan.fry_ingredients()
                         self.__held_ingredient = None
                     elif self.is_near_pan() and self.__held_ingredient is None:
-                        cooked_ingredients = self.__pan.get_cooked_ingredients()
-                        self.__held_ingredient = cooked_ingredients.pop()
+                        if self.__pan.is_ready_to_pick():
+                            self.__pan.get_cooked_ingredients()
 
                     else:
                         self.drop_food_to_the_world()
@@ -94,26 +96,29 @@ class GameApp:
             self.__held_ingredient = None
 
     def is_near_pan(self):
-        if self.__held_ingredient is None:
+        if self.__held_ingredient is not None:
             chef_x, chef_y = self.__chef.get_position()
             pan_x, pan_y = self.__pan.get_position()
 
             distance = ((chef_x - pan_x) ** 2 + (chef_y - pan_y) ** 2) ** 0.5
             return distance < 100
 
+
     def update(self):
         """Update game logic"""
         self.__chef.move()
         self.__zombie.chase_player(self.__chef)
         self.__pan.fry_ingredients()
+        self.__menu.update()
 
     def render(self):
         """Render game objects"""
-        self.__screen.fill(Config.get('WHITE'))  # Clear screen
+        self.__screen.fill(Config.get_config('BACKGROUND'))  # Clear screen
 
         self.__fridge.draw(self.__screen)
         self.__plate.draw(self.__screen)
         self.__pan.draw(self.__screen)
+        self.__pot.draw(self.__screen)
         if self.__held_ingredient:
             self.__screen.blit(self.__held_ingredient.images, self.__chef.get_position())
 
@@ -123,6 +128,7 @@ class GameApp:
 
         self.__chef.draw()
         self.__zombie.draw()
+        self.__menu.draw(self.__screen)
 
         pg.display.flip()
 
@@ -131,7 +137,7 @@ class GameApp:
             self.render()
             self.handle_events()
             self.update()
-            self.__clock.tick(Config.get('FPS'))
+            self.__clock.tick(Config.get_config('FPS'))
         pg.quit()
 
 

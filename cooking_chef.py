@@ -4,23 +4,23 @@ from cooking_config import Config
 
 class Chef:
     def __init__(self):
-        self.__position = (Config.get('WIN_SIZE_W') // 2, Config.get('WIN_SIZE_H') // 2)  # Starting position at center
+        self.__position = (Config.get_config('WIN_SIZE_W') // 2, Config.get_config('WIN_SIZE_H') // 2)  # Starting position at center
 
         self.speed = 3
         self.screen = None
 
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
-        self.chef_rect = pg.Rect(self.__position[0], self.__position[1], Config.get('GRID_SIZE_W'), Config.get('GRID_SIZE_H'))
+        self.chef_rect = pg.Rect(self.__position[0], self.__position[1], Config.get_config('GRID_SIZE_W'), Config.get_config('GRID_SIZE_H'))
         self.reset()
 
     def reset(self):
-        self.__position = (Config.get('WIN_SIZE_W') // 2, Config.get('WIN_SIZE_H') // 2)
+        self.__position = (Config.get_config('WIN_SIZE_W') // 2, Config.get_config('WIN_SIZE_H') // 2)
         self.speed = 10
         self.chef_rect.topleft = self.__position
 
     def draw(self):
         if self.screen:
-            pg.draw.rect(self.screen, Config.get('BLACK'), self.chef_rect)
+            pg.draw.rect(self.screen, Config.get_config('BLACK'), self.chef_rect)
 
     def move(self):
         # Update the animation based on movement
@@ -38,9 +38,9 @@ class Chef:
 
         # Keep the chef inside the screen
         self.chef_rect.x = max(0, self.chef_rect.x)
-        self.chef_rect.x = min(Config.get('WIN_SIZE_W') - Config.get('GRID_SIZE_W'), self.chef_rect.x)
-        self.chef_rect.y = max(0, self.chef_rect.y)
-        self.chef_rect.y = min(Config.get('WIN_SIZE_H') - Config.get('GRID_SIZE_H'), self.chef_rect.y)
+        self.chef_rect.x = min(Config.get_config('WIN_SIZE_W') - Config.get_config('GRID_SIZE_W'), self.chef_rect.x)
+        self.chef_rect.y = max(100, self.chef_rect.y)
+        self.chef_rect.y = min(Config.get_config('WIN_SIZE_H') - Config.get_config('GRID_SIZE_H'), self.chef_rect.y)
         self.__position = (self.chef_rect.x, self.chef_rect.y)
 
     def get_position(self):

@@ -19,7 +19,7 @@ class KitchenMap:
         return tile
 
     def draw(self, screen):
-        for row_idx, row in enumerate(Config.get('MAP')):
+        for row_idx, row in enumerate(Config.get_config('MAP')):
             for col_idx, tile in enumerate(row):
                 screen.blit(self.get_tiles(tile[0], tile[1]), (col_idx * self.tile_size, row_idx * self.tile_size))
 
