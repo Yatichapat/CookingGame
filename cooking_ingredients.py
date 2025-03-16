@@ -31,12 +31,12 @@ class Ingredients:
         screen.blit(self.images, (x, y))  # Directly use self.__image to draw
 
 class Menu:
-    def __init__(self, duration=5000, position=(100, 170), background_position=(50,50)):  # Menu lasts 5 seconds
+    def __init__(self, duration=5000, position=(75, 170), background_position=(10,50)):  # Menu lasts 5 seconds
         self.duration = duration
-        self.font = pg.font.Font(None, 24)  # Default font, size 36
-        self.remaining_time = duration  # Countdown in milliseconds
+        self.font = pg.font.Font(None, 24)
+        self.remaining_time = duration
         self.position = position
-        self.active = True  # Whether the menu is visible
+        self.active = True
         self.background = Config.get_config('MESSAGE_BACKGROUND')
         self.background_position = background_position
 

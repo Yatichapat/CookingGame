@@ -37,7 +37,7 @@ class Chef:
             self.chef_rect.x += self.speed
 
         # Keep the chef inside the screen
-        self.chef_rect.x = max(0, self.chef_rect.x)
+        self.chef_rect.x = max(200, self.chef_rect.x)
         self.chef_rect.x = min(Config.get_config('WIN_SIZE_W') - Config.get_config('GRID_SIZE_W'), self.chef_rect.x)
         self.chef_rect.y = max(100, self.chef_rect.y)
         self.chef_rect.y = min(Config.get_config('WIN_SIZE_H') - Config.get_config('GRID_SIZE_H'), self.chef_rect.y)

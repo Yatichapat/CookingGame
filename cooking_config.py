@@ -18,7 +18,8 @@ class Config:
         'GRAY': (128, 128, 128),
         'BACKGROUND': (249, 234, 211),
         'CHARACTER_SIZE': 100,
-        'MESSAGE_BACKGROUND': pg.transform.scale(pg.image.load("images/message.png"),(200, 200))
+        'MESSAGE_BACKGROUND': pg.transform.scale(pg.image.load("images/message.png"),(200, 200)),
+        'MAP': pg.transform.scale(pg.image.load("images/map/kitchen16_tan.png"),(200, 200))
     }
 
     __IMAGE_CACHE = {}

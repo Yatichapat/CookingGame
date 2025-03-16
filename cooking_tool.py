@@ -33,9 +33,9 @@ class Fridge:
     def move_selection(self, direction):
         """Moves selection up/down in the fridge."""
         if self.is_open:
-            if direction == "UP":
+            if direction == "LEFT":
                 self.__select_index = (self.__select_index - 1) % len(self.__ingredients)
-            elif direction == "DOWN":
+            elif direction == "RIGHT":
                 self.__select_index = (self.__select_index + 1) % len(self.__ingredients)
 
     def add_dropped_ingredient(self, ingredient):
@@ -64,9 +64,12 @@ class Fridge:
         screen.blit(fridge_image, (fridge_x, fridge_y))
 
         if self.is_open:
+            items_per_row = 4
             for i, ingredient in enumerate(self.__ingredients):
-                ingredient_x = 70 + (i * Config.get_config('GRID_SIZE_H') * 1.5)
-                ingredient_y = 60
+                row = i // items_per_row  # Determine the row number
+                col = i % items_per_row
+                ingredient_x = 10 + (col * Config.get_config('GRID_SIZE_W') * 2.5)
+                ingredient_y = 10 + (row * Config.get_config('GRID_SIZE_H') * 1.5)
                 ingredient.draw_at(screen, ingredient_x, ingredient_y)
 
                 if i == self.__select_index:
@@ -81,7 +84,7 @@ class Fridge:
                                ingredient.get_position()[1] * Config.get_config('GRID_SIZE_H'))
 
 
-class Tools:
+class Equipments:
     def __init__(self, x, y, image_path):
         self.__position = (x, y)
         self.__ingredients = []  # List of (ingredient, start_time)
@@ -97,31 +100,26 @@ class Tools:
         transformed_items = []
         current_time = pg.time.get_ticks()  # Get the current time
 
-        for i in range(len(self.__ingredients)):
-            ingredient, start_time = self.__ingredients[i]
-            elapsed_time = (current_time - start_time) / 1000  # Time cooked in seconds
+        new_ingredients = []
+        for ingredient, start_time in self.__ingredients:
+            elapsed_time = (current_time - start_time) / 1000
+            cooked_ingredient = None
 
-            # Cooking transformations based on elapsed time
-            if ingredient.get_type() == "egg":
+            if ingredient.get_type() == "egg" and elapsed_time >= 0\
+                    :
                 cooked_ingredient = Ingredients(*ingredient.get_position(), "egg_fried")
-                self.__ingredients[i][0] = cooked_ingredient  # Replace the raw ingredient
-                transformed_items.append((ingredient, cooked_ingredient))
-                if elapsed_time >= 5:
-                    print(f"Egg is ready! Cooked in {elapsed_time:.1f} seconds.")
-
             elif ingredient.get_type() == "lamb" and elapsed_time >= 8:
                 cooked_ingredient = Ingredients(*ingredient.get_position(), "lamb_cooked")
-                self.__ingredients[i][0] = cooked_ingredient
-                transformed_items.append((ingredient, cooked_ingredient))
-                print(f"Lamb is ready! Cooked in {elapsed_time:.1f} seconds.")
-
             elif ingredient.get_type() == "chicken" and elapsed_time >= 8:
                 cooked_ingredient = Ingredients(*ingredient.get_position(), "chicken_cooked")
-                self.__ingredients[i][0] = cooked_ingredient
-                transformed_items.append((ingredient, cooked_ingredient))
-                print(f"Chicken is ready! Cooked in {elapsed_time:.1f} seconds.")
 
-        return transformed_items
+            if cooked_ingredient:
+                transformed_items.append((ingredient, cooked_ingredient))
+                new_ingredients.append([cooked_ingredient, start_time])
+            else:
+                new_ingredients.append([ingredient, start_time])
+
+        self.__ingredients = new_ingredients  # Replace the list in one go
 
     def get_cooked_ingredients(self):
         """Returns cooked ingredients and removes them from the tool."""
@@ -141,12 +139,9 @@ class Tools:
         return True
 
     def take_tool(self):
-        """Picks up the tool if all ingredients are cooked."""
-        if self.is_ready_to_pick():
-            cooked_food = [ingredient for ingredient, _ in self.__ingredients]
-            self.__ingredients.clear()  # Clear the ingredients after taking them
-            return cooked_food
-        return None
+        """Picks up cooked ingredients but keeps the pan in place."""
+        cooked_food = self.get_cooked_ingredients()
+        return cooked_food if cooked_food else None
 
     def draw(self, screen):
         """Draws the tool and its ingredients."""
@@ -166,7 +161,7 @@ class Tools:
         return self.__position
 
 
-class Pan(Tools):
+class Pan(Equipments):
     def __init__(self, x, y):
         super().__init__(x, y, "images/pan.png")
 
@@ -177,7 +172,7 @@ class Pan(Tools):
         self.add_ingredient(ingredient)
 
 
-class Pot(Tools):
+class Pot(Equipments):
     def __init__(self, x, y):
         super().__init__(x, y, "images/pot.png")
 
@@ -186,6 +181,28 @@ class Pot(Tools):
 
     def put_ingredient_in_pot(self, ingredient):
         self.add_ingredient(ingredient)
+
+
+class CuttingBoard(Equipments):
+    def __init__(self, x, y):
+        super().__init__(x, y, "images/cutting.png")
+
+    def cut_ingredients(self):
+        """Cuts all ingredients on the plate and returns the cut versions."""
+        cut_items = []
+        for ingredient in self.__ingredients:
+            if ingredient.get_type() == "carrot":
+                cut_version = Ingredients(*ingredient.get_position(), "carrot_sliced")
+            elif ingredient.get_type() == "onion":
+                cut_version = Ingredients(*ingredient.get_position(), "onion_diced")
+            else:
+                cut_version = Ingredients(*ingredient.get_position(), f"{ingredient.get_type()}_cut")
+
+            cut_items.append(cut_version)
+            print(f"Cut {ingredient.get_type()} into {cut_version.get_type()}.")
+
+        self.__ingredients.clear()  # Remove all ingredients after cutting
+        return cut_items
 
 
 class Plate:
