@@ -127,9 +127,9 @@ class Equipments:
         for item in self.__ingredients[:]:
             ingredient, _ = item
             if "_cooked" in ingredient.get_type() or "_fried" in ingredient.get_type():
-                cooked.append(ingredient)
-                self.__ingredients.remove(item)
-        return cooked
+                self.__ingredients.remove(item)  # Remove from the pan
+                return ingredient  # Return only one ingredient
+        return None
 
     def is_ready_to_pick(self):
         """Checks if all ingredients are cooked and ready to be picked."""
@@ -213,6 +213,7 @@ class Plate:
     def add_ingredient(self, ingredient):
         if len(self.__ingredients) < 3:
             self.__ingredients.append(ingredient)
+
         else:
             print("plate is full!")
 
@@ -238,6 +239,9 @@ class Plate:
         plate_image = pg.image.load("images/plate.png")
         plate_image = pg.transform.scale(plate_image, (80, 80))
         screen.blit(plate_image, (plate_x, plate_y))
+
+        for index, ingredient in enumerate(self.__ingredients):
+            ingredient.draw_at(screen, plate_x + 17, plate_y + 10 + (index * 10))
 
     def set_position(self, position):
         self.__position = position

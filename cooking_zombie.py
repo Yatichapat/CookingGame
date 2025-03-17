@@ -32,7 +32,7 @@ class Zombie:
         self.zombie_rect = self.idle_frames[0].get_rect(topleft=self.__position)
         self.zombie_sprite = self.idle_frames[0]
 
-        self.speed = 2
+        self.speed = 4
         self.chasing = False
 
     def move_towards(self, target_x, target_y):

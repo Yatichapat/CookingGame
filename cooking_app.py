@@ -27,6 +27,7 @@ class GameApp:
         self.__chef.set_screen(self.__screen)
         self.__zombie1.set_screen(self.__screen)
         self.__held_ingredient = None
+        self.__held_tool = None
         self.__dropped_ingredient = []
 
         self.__clock = pg.time.Clock()
@@ -68,44 +69,25 @@ class GameApp:
                         self.__pot.put_ingredient_in_pot(self.__held_ingredient)
                         self.__pot.boil_ingredients()
                         self.__held_ingredient = None
+
                     elif tool == 'cut':
                         pass
+
+                    elif tool == 'plate':
+                        self.__plate.add_ingredient(self.__held_ingredient)
+                        self.__held_ingredient = None
 
                     else:
                         self.drop_food_to_the_world()
 
-                # elif event.key == pg.K_RETURN:
-                #     if self.__held_ingredient is None:
-                #         tool = self.is_near_tool()
-                #         if tool == 'pan' and self.__pan.is_ready_to_pick():
-                #             self.__held_ingredient = self.
+                elif event.key == pg.K_RETURN:
+                    if self.__held_ingredient is None:
+                        tool = self.is_near_tool()
+                        if tool == 'pan' and self.__pan.is_ready_to_pick():
+                            self.__held_ingredient = self.__pan.take_tool()
 
-                elif isinstance(self.__held_ingredient, Pan):  # If holding a pan
-                    plate = self.is_near_tool()
-                    if plate:
-                        cooked_food = self.__held_ingredient.take_tool()  # Take cooked ingredients
-                        if cooked_food:
-                            plate.add_ingredient(cooked_food)  # Place food on the plate
-                        self.__held_ingredient = None  # Drop the pan after pouring
-
-                elif event.key == pg.K_UP:
-                    self.__chef.movement['UP'] = True
-                elif event.key == pg.K_DOWN:
-                    self.__chef.movement['DOWN'] = True
-                elif event.key == pg.K_LEFT:
-                    self.__chef.movement['LEFT'] = True
-                elif event.key == pg.K_RIGHT:
-                    self.__chef.movement['RIGHT'] = True
-
-            elif event.type == pg.KEYUP:
-                if event.key == pg.K_UP:
-                    self.__chef.movement['UP'] = False
-                elif event.key == pg.K_DOWN:
-                    self.__chef.movement['DOWN'] = False
-                elif event.key == pg.K_LEFT:
-                    self.__chef.movement['LEFT'] = False
-                elif event.key == pg.K_RIGHT:
-                    self.__chef.movement['RIGHT'] = False
+            if event.type in {pg.KEYDOWN, pg.KEYUP}:
+                self.__chef.handle_input(event, self.__fridge.is_open)
 
     def drop_food_to_the_world(self):
         """Drop the held ingredient"""
@@ -139,13 +121,12 @@ class GameApp:
 
     def render(self):
         """Render game objects"""
-        # self.__screen.fill(Config.get_config('BACKGROUND'))  # Clear screen
-        self.__kitchen_map.draw_tiles()
         self.__fridge.draw(self.__screen)
         self.__plate.draw(self.__screen)
         self.__pan.draw(self.__screen)
         self.__pot.draw(self.__screen)
         self.__cutting_board.draw(self.__screen)
+        self.__chef.draw()
         if self.__held_ingredient:
             self.__screen.blit(self.__held_ingredient.images, self.__chef.get_position())
 
@@ -153,7 +134,6 @@ class GameApp:
             x, y = ingredient.get_position()
             ingredient.draw_at(self.__screen, x + 10, y)
 
-        self.__chef.draw()
         self.__zombie1.draw()
         self.__menu.draw(self.__screen)
 

@@ -7,8 +7,11 @@ class KitchenMap:
         self.__tile_size = 60  # Size of each grid square
         self.__screen = screen
 
-        self.GRID_COLOR = Config.get_config('BROWN')  # Color for grid lines
+        self.GRID_COLOR = Config.get_config('GRAY')  # Color for grid lines
         self.BACKGROUND_COLOR = Config.get_config('BACKGROUND')  # Background color for the screen
+        self.SIDEBAR_COLOR = Config.get_config('PASTEL_GRAY')  # Color for the sidebar
+        self.SIDEBAR_WIDTH = 220  # Width of the sidebar (set to 200 pixels)
+        self.__line_color = Config.get_config('BLACK')
 
     def draw_tiles(self):
         """Draw grid tiles on the screen with alternating colors."""
@@ -21,9 +24,9 @@ class KitchenMap:
             for x in range(0, window_width, self.__tile_size):
                 # Alternate between black and white squares
                 if (x // self.__tile_size + y // self.__tile_size) % 2 == 0:
-                    color = (255, 255, 255)  # White
+                    color = Config.get_config('PASTEL_BROWN')
                 else:
-                    color = (0, 0, 0)  # Black
+                    color = Config.get_config('PASTEL_GRAY')
                 # Draw each square
                 pg.draw.rect(self.__screen, color, (x, y, self.__tile_size, self.__tile_size))
 
@@ -35,7 +38,21 @@ class KitchenMap:
         for x in range(0, window_width, self.__tile_size):
             pg.draw.line(self.__screen, self.GRID_COLOR, (x, 0), (x, window_height), 4)  # Line width set to 4
 
+    def draw_menu_block(self):
+        """Draw the sidebar (menu block) on the left side of the screen."""
+        window_width = Config.get_config('WIN_SIZE_W')
+        window_height = Config.get_config('WIN_SIZE_H')
+
+        # Draw the rectangle (menu block) on the left side of the screen
+        pg.draw.rect(self.__screen, self.SIDEBAR_COLOR,
+                     (0, 0, self.SIDEBAR_WIDTH, window_height))  # Sidebar on the left
+
+        # Draw a line on the right edge of the sidebar
+        pg.draw.line(self.__screen, self.__line_color,
+                     (self.SIDEBAR_WIDTH, 0), (self.SIDEBAR_WIDTH, window_height), 4)  # Line width set to 4
+
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.BACKGROUND_COLOR)  # Fill the screen with background color
         self.draw_tiles()  # Draw the grid
+        self.draw_menu_block()

@@ -30,6 +30,7 @@ class Ingredients:
         """Draw ingredient at a specific position (e.g., inside the fridge)."""
         screen.blit(self.images, (x, y))  # Directly use self.__image to draw
 
+
 class Menu:
     def __init__(self, duration=5000, position=(75, 170), background_position=(10,50)):  # Menu lasts 5 seconds
         self.duration = duration
