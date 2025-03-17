@@ -32,7 +32,7 @@ class Ingredients:
 
 
 class Menu:
-    def __init__(self, duration=5000, position=(75, 170), background_position=(10,50)):  # Menu lasts 5 seconds
+    def __init__(self, duration=5000, position=(870, 570), background_position=(800,450)):  # Menu lasts 5 seconds
         self.duration = duration
         self.font = pg.font.Font(None, 24)
         self.remaining_time = duration

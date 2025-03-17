@@ -31,6 +31,7 @@ class GameApp:
         self.__dropped_ingredient = []
 
         self.__clock = pg.time.Clock()
+        self.__game_ui = GameUI()
         self.__running = True
         self.__menu = Menu()
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
@@ -71,7 +72,9 @@ class GameApp:
                         self.__held_ingredient = None
 
                     elif tool == 'cut':
-                        pass
+                        self.__cutting_board.add_ingredient(self.__held_ingredient)
+                        self.__cutting_board.cut_ingredients()
+                        self.__held_ingredient = None
 
                     elif tool == 'plate':
                         self.__plate.add_ingredient(self.__held_ingredient)
@@ -136,6 +139,7 @@ class GameApp:
 
         self.__zombie1.draw()
         self.__menu.draw(self.__screen)
+        self.__game_ui.draw_timer(self.__screen)
 
         pg.display.flip()
 

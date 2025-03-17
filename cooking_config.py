@@ -36,13 +36,22 @@ class Config:
         image_paths = {
             "lamb": "images/simply cooked/Raw food/lamb3.png",
             "lamb_cooked": "images/simply cooked/Cooked food/lamb1.png",
+
             "bread": "images/simply cooked/Cooked food/bread1.png",
             "leek": "images/FarmVeggies/Leek.png",
+
             "egg": "images/simply cooked/Raw food/egg3.png",
             "egg_fried": "images/simply cooked/Cooked food/egg1.png",
+
             "chicken": "images/simply cooked/Raw food/chiken3.png",
             "chicken_cooked": "images/simply cooked/Cooked food/chiken1.png",
+
             "sandwich": "images/simply cooked/Cooked food/sandwich1.png",
+            "tomato": "images/FarmVeggies/Tomato.png",
+            "tomato_sliced": "images/FarmVeggies/Tomatoslice.png",
+            "lettuce": "images/FarmVeggies/lettuce.png",
+            "lettuce_sliced": "images/FarmVeggies/lettuceslice.png"
+
         }
 
         for ingredient, path in image_paths.items():

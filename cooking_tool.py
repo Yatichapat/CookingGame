@@ -14,7 +14,9 @@ class Fridge:
             Ingredients(2, 4, "bread"),
             Ingredients(2, 8, "leek"),
             Ingredients(2, 6, "egg"),
-            Ingredients(4, 10, "chicken")
+            Ingredients(4, 10, "chicken"),
+            Ingredients(2, 10, "lettuce"),
+            Ingredients(2, 10, "tomato")
         ]
         self.is_open = False
         self.__dropped_ingredients = []
@@ -104,18 +106,34 @@ class Equipments:
         for ingredient, start_time in self.__ingredients:
             elapsed_time = (current_time - start_time) / 1000
             cooked_ingredient = None
+            sliced_ingredient = None
 
-            if ingredient.get_type() == "egg" and elapsed_time >= 0\
-                    :
+            if ingredient.get_type() == "egg" and elapsed_time >= 0:
                 cooked_ingredient = Ingredients(*ingredient.get_position(), "egg_fried")
+
             elif ingredient.get_type() == "lamb" and elapsed_time >= 8:
                 cooked_ingredient = Ingredients(*ingredient.get_position(), "lamb_cooked")
+
             elif ingredient.get_type() == "chicken" and elapsed_time >= 8:
                 cooked_ingredient = Ingredients(*ingredient.get_position(), "chicken_cooked")
 
+                # Handle sliced ingredients
+            if ingredient.get_type() == "tomato" and elapsed_time >= 0:  # Tomato slices after 2 seconds
+                print("Tomato slice!")
+                sliced_ingredient = Ingredients(*ingredient.get_position(), "tomato_sliced")
+
+            elif ingredient.get_type() == "lettuce" and elapsed_time >= 0:  # Cucumber slices after 1 second
+                sliced_ingredient = Ingredients(*ingredient.get_position(), "lettuce_sliced")
+
+            # Add transformations
             if cooked_ingredient:
                 transformed_items.append((ingredient, cooked_ingredient))
                 new_ingredients.append([cooked_ingredient, start_time])
+
+            elif sliced_ingredient:
+                transformed_items.append((ingredient, sliced_ingredient))
+                new_ingredients.append([sliced_ingredient, start_time])
+
             else:
                 new_ingredients.append([ingredient, start_time])
 
@@ -129,6 +147,15 @@ class Equipments:
             if "_cooked" in ingredient.get_type() or "_fried" in ingredient.get_type():
                 self.__ingredients.remove(item)  # Remove from the pan
                 return ingredient  # Return only one ingredient
+        return None
+
+    def get_sliced_ingredients(self):
+        sliced = []
+        for item in self.__ingredients[:]:
+            ingredient, _ = item
+            if "_sliced" in ingredient.get_type():
+                self.__ingredients.remove(item)  # Remove from the cutting board
+                return ingredient  # Return only one sliced ingredient
         return None
 
     def is_ready_to_pick(self):
@@ -186,24 +213,17 @@ class Pot(Equipments):
 class CuttingBoard(Equipments):
     def __init__(self, x, y):
         super().__init__(x, y, "images/cutting.png")
+        self.__ingredients = []
+        self.__sliced_ingredients = []
+
+    def add_ingredient(self, ingredient):
+        self.__ingredients.append(ingredient)
 
     def cut_ingredients(self):
-        """Cuts all ingredients on the plate and returns the cut versions."""
-        cut_items = []
-        for ingredient in self.__ingredients:
-            if ingredient.get_type() == "carrot":
-                cut_version = Ingredients(*ingredient.get_position(), "carrot_sliced")
-            elif ingredient.get_type() == "onion":
-                cut_version = Ingredients(*ingredient.get_position(), "onion_diced")
-            else:
-                cut_version = Ingredients(*ingredient.get_position(), f"{ingredient.get_type()}_cut")
+        return self.cook_ingredients()
 
-            cut_items.append(cut_version)
-            print(f"Cut {ingredient.get_type()} into {cut_version.get_type()}.")
-
-        self.__ingredients.clear()  # Remove all ingredients after cutting
-        return cut_items
-
+    def get_sliced_ingredients(self):
+        return self.get_sliced_ingredients()
 
 class Plate:
     def __init__(self, x, y):

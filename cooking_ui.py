@@ -56,3 +56,36 @@ class KitchenMap:
         self.__screen.fill(self.BACKGROUND_COLOR)  # Fill the screen with background color
         self.draw_tiles()  # Draw the grid
         self.draw_menu_block()
+
+
+class GameUI:
+    def __init__(self):
+        self.__game_over = False
+        self.__start_time = pg.time.get_ticks()
+        self.__game_time = 60
+
+    def update_time(self):
+        elapsed_time = (pg.time.get_ticks() - self.__start_time) // 1000
+        remaining_time = self.__game_time - elapsed_time
+
+        if remaining_time <= 0:
+            self.__game_over = True
+            remaining_time = 0
+        return remaining_time
+
+    def draw_timer(self, screen):
+        remaining_time = self.update_time()
+        minutes = remaining_time // 60
+        seconds = remaining_time % 60
+        time_text = f"{minutes:02}: {seconds:02}"
+
+        font = pg.font.SysFont(None, 48)
+        timer_surface = font.render(time_text, True, Config.get_config('BLACK'))  # White color
+        screen.blit(timer_surface, (10, 550))  # Draw timer at top-left corner
+
+    def draw_game_over(self, screen):
+        # Display Game Over message
+        font = pg.font.SysFont(None, 72)
+        game_over_text = font.render("Game Over", True, (255, 0, 0))  # Red color
+        screen.blit(game_over_text, (300, 250))  # Center the text on the screen
+
