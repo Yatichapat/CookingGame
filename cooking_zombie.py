@@ -4,53 +4,41 @@ import random
 
 
 class Zombie:
-    def __init__(self, idle_image):
+    def __init__(self):
         self.__position = (random.randint(0, Config.get_config('WIN_SIZE_W') - 1),
                            random.randint(0, Config.get_config('WIN_SIZE_H') - 1))
         self.screen = None
 
-        # Load idle sprite sheet
-        self.__idle_image = idle_image
-
-        # Define frame properties (these need to be known beforehand)
-        self.frame_width_idle = 128
-        self.frame_height_idle = 128
-        self.total_frames_idle = 6
-
-        # Extract frames
-        self.idle_frames = [
-            pg.transform.scale(
-                self.__idle_image.subsurface(i * self.frame_width_idle, 0, self.frame_width_idle, self.frame_height_idle),
-                (Config.get_config('CHARACTER_SIZE') + 10, Config.get_config('CHARACTER_SIZE') + 10)
-            )
-            for i in range(self.total_frames_idle)
-        ]
-
-        self.current_frame = 0
-
-        # Initialize zombie rectangle
-        self.zombie_rect = self.idle_frames[0].get_rect(topleft=self.__position)
-        self.zombie_sprite = self.idle_frames[0]
-
-        self.speed = 4
-        self.chasing = False
+        self.__image = pg.transform.scale(pg.image.load("images/Zombie_1/Walk_still.png"), (30,70))
+        self.zombie_rect = self.__image.get_rect(topleft=self.__position)
+        self.__speed = 4
+        self.__chasing = False
+        self.__last_attack_time = 0
 
     def move_towards(self, target_x, target_y):
         """Move towards a given (x, y) target."""
         dx = target_x - self.zombie_rect.x
         dy = target_y - self.zombie_rect.y
-        distance = max(1, (dx**2 + dy**2) ** 0.5)  # Prevent division by zero
+        distance = max(0.1, (dx**2 + dy**2) ** 0.5)  # Prevent division by zero
 
         # Normalize direction and apply speed
-        self.zombie_rect.x += self.speed * (dx / distance)
-        self.zombie_rect.y += self.speed * (dy / distance)
+        self.zombie_rect.x += self.__speed * (dx / distance)
+        self.zombie_rect.y += self.__speed * (dy / distance)
         self.__position = (self.zombie_rect.x, self.zombie_rect.y)
 
     def chase_player(self, player):
         """Make the zombie chase the player."""
         player_x, player_y = player.get_position()
         self.move_towards(player_x, player_y)
-        self.chasing = True
+        self.__chasing = True
+        self.attack(player)
+
+    def attack(self, player):
+        current_time = pg.time.get_ticks()
+        if current_time - self.__last_attack_time >= 1000:
+            if self.zombie_rect.colliderect(player.get_rect()):
+                player.take_damage(10)
+                self.__last_attack_time = current_time
 
     def get_position(self):
         """Get the current position of the zombie"""
@@ -61,4 +49,4 @@ class Zombie:
 
     def draw(self):
         if self.screen:
-            self.screen.blit(self.zombie_sprite, self.zombie_rect)
+            self.screen.blit(self.__image, self.zombie_rect)

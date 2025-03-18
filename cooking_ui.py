@@ -4,7 +4,7 @@ from cooking_config import *
 
 class KitchenMap:
     def __init__(self, screen):
-        self.__tile_size = 60  # Size of each grid square
+        self.__tile_size = 60
         self.__screen = screen
 
         self.GRID_COLOR = Config.get_config('GRAY')  # Color for grid lines
@@ -39,22 +39,35 @@ class KitchenMap:
             pg.draw.line(self.__screen, self.GRID_COLOR, (x, 0), (x, window_height), 4)  # Line width set to 4
 
     def draw_menu_block(self):
-        """Draw the sidebar (menu block) on the left side of the screen."""
         window_width = Config.get_config('WIN_SIZE_W')
         window_height = Config.get_config('WIN_SIZE_H')
 
-        # Draw the rectangle (menu block) on the left side of the screen
         pg.draw.rect(self.__screen, self.SIDEBAR_COLOR,
                      (0, 0, self.SIDEBAR_WIDTH, window_height))  # Sidebar on the left
 
-        # Draw a line on the right edge of the sidebar
         pg.draw.line(self.__screen, self.__line_color,
                      (self.SIDEBAR_WIDTH, 0), (self.SIDEBAR_WIDTH, window_height), 4)  # Line width set to 4
+
+    def draw_wall(self):
+        wall_width = Config.get_config('WIN_SIZE_W')
+        wall_height = 100
+
+        wall_color = Config.get_config('GRAY_BLUE')
+        pg.draw.rect(self.__screen, wall_color, (0, 0, wall_width, wall_height))
+
+    def draw_counter_top(self):
+        counter_top_image = pg.image.load("images/countertop.png")
+        counter_top_image = pg.transform.scale(counter_top_image, (Config.get_config('WIN_SIZE_W') - 300, 80))
+
+        counter_position = (350, 70)
+        self.__screen.blit(counter_top_image, counter_position)
 
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.BACKGROUND_COLOR)  # Fill the screen with background color
         self.draw_tiles()  # Draw the grid
+        self.draw_wall()
+        self.draw_counter_top()
         self.draw_menu_block()
 
 
@@ -85,7 +98,7 @@ class GameUI:
 
     def draw_game_over(self, screen):
         # Display Game Over message
-        font = pg.font.SysFont(None, 72)
-        game_over_text = font.render("Game Over", True, (255, 0, 0))  # Red color
-        screen.blit(game_over_text, (300, 250))  # Center the text on the screen
-
+        if self.__game_over is True:
+            font = pg.font.SysFont(None, 72)
+            game_over_text = font.render("Game Over", True, Config.get_config('BLACK'))
+            screen.blit(game_over_text, (Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))

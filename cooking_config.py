@@ -16,6 +16,7 @@ class Config:
         'RED': (255, 0, 0),
         'BROWN': (165, 42, 42),
         'GRAY': (128, 128, 128),
+        'GRAY_BLUE': (202, 209, 211),
         'PASTEL_BROWN': (175, 175, 158),
         'PASTEL_GRAY': (220, 220, 213),
         'BACKGROUND': (249, 234, 211),

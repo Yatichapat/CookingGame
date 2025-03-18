@@ -1,3 +1,4 @@
+import time
 import pygame as pg
 from cooking_config import Config
 
@@ -21,6 +22,7 @@ class Chef:
         self.__chef_sprite = self.__chef_sprite_original
         self.__chef_rect = self.__chef_sprite.get_rect(center=self.__position)
         self.__facing_left = False
+
 
     def reset(self):
         self.__position = (Config.get_config('WIN_SIZE_W') // 2, Config.get_config('WIN_SIZE_H') // 2)
@@ -111,5 +113,9 @@ class Chef:
     def take_damage(self, damage):
         self.__chef_health = max(0, self.__chef_health - damage)
 
+
     def heal(self, amount):
         self.__chef_health = min(self.__max_health, self.__chef_health + amount)
+
+    def get_rect(self):
+        return self.__chef_rect

@@ -1,5 +1,7 @@
 from cooking_config import Config
 import pygame as pg
+import random
+from collections import deque
 
 
 class Ingredients:
@@ -32,31 +34,48 @@ class Ingredients:
 
 
 class Menu:
+    MENU_ITEMS = ["sandwich", "egg_fried", "chicken_cooked"]
+
     def __init__(self, duration=5000, position=(870, 570), background_position=(800,450)):  # Menu lasts 5 seconds
         self.duration = duration
         self.font = pg.font.Font(None, 24)
         self.remaining_time = duration
         self.position = position
+
         self.active = True
         self.background = Config.get_config('MESSAGE_BACKGROUND')
         self.background_position = background_position
 
         self.start_time = pg.time.get_ticks()
+        self.orders = deque()
+
+    def add_order(self):
+        if len(self.orders) < 3:
+            menu_item = random.choice(self.MENU_ITEMS)
+            order = {
+                "name": menu_item,
+                "start_time": pg.time.get_ticks(),
+                "duration": 10000,  # Each order lasts 5 seconds
+                "position": (50, 50 + len(self.orders) * 40)  # Stack vertically
+            }
+            self.orders.append(order)
 
     def update(self):
-        """Reduce time based on the elapsed time (dt)."""
-        if self.active:
-            elapsed_time = pg.time.get_ticks() - self.start_time
-            self.remaining_time = max(self.duration - elapsed_time, 0)
-            if self.remaining_time <= 0:
-                self.active = False  # Hide menu when time runs out
+        current_time = pg.time.get_ticks()
+        while self.orders and current_time - self.orders[0]["start_time"] >= self.orders[0]["duration"]:
+            self.orders.popleft()  # Remove expired order
+
+        if random.random() < 0.02:
+            self.add_order()
 
     def draw(self, screen):
         """Render the menu if active."""
 
-        if self.active:
+        for i, order in enumerate(self.orders):
             screen.blit(self.background, self.background_position)
-            text = self.font.render(f"Menu: {self.remaining_time // 1000}s", True, Config.get_config('BLACK'))
-            screen.blit(text, self.position)
+
+            text = self.font.render(order["name"], True, Config.get_config('BLACK'))
+            screen.blit(text, (870 - i * 300, 570))  # Update positions dynamically
+
 
 

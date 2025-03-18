@@ -16,9 +16,9 @@ class GameApp:
 
         self.__chef = Chef()
 
-        self.__zombie1 = Zombie(pg.image.load("images/Zombie_1/Idle.png"))
+        self.__zombie1 = Zombie()
 
-        self.__fridge = Fridge(200, 20, self.__chef)
+        self.__fridge = Fridge(200, 30, self.__chef)
         self.__pan = Pan(500, 40)
         self.__pot = Pot(800, 30)
         self.__plate = Plate(600, 50)
@@ -129,15 +129,16 @@ class GameApp:
         self.__pan.draw(self.__screen)
         self.__pot.draw(self.__screen)
         self.__cutting_board.draw(self.__screen)
+        self.__zombie1.draw()
         self.__chef.draw()
         if self.__held_ingredient:
-            self.__screen.blit(self.__held_ingredient.images, self.__chef.get_position())
+            x, y = self.__chef.get_position()
+            self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
 
         for ingredient in self.__dropped_ingredient:
             x, y = ingredient.get_position()
             ingredient.draw_at(self.__screen, x + 10, y)
 
-        self.__zombie1.draw()
         self.__menu.draw(self.__screen)
         self.__game_ui.draw_timer(self.__screen)
 
