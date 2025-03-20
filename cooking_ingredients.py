@@ -34,33 +34,34 @@ class Ingredients:
 
 
 class Menu:
-    MENU_ITEMS = ["sandwich", "egg_fried", "chicken_cooked"]
+    MENU_ITEMS = ["sandwich", "egg fried", "chicken fried", "lamb fried"]
 
-    def __init__(self, duration=5000, position=(870, 570), background_position=(800,450)):  # Menu lasts 5 seconds
-        self.duration = duration
-        self.font = pg.font.Font(None, 24)
-        self.remaining_time = duration
-        self.position = position
+    def __init__(self, max_orders=3):
+        self.font = pg.font.Font(None, 14)
+        self.orders = deque()
+        self.max_orders = max_orders
 
-        self.active = True
-        self.background = Config.get_config('MESSAGE_BACKGROUND')
-        self.background_position = background_position
+        self.__images = {
+            item: pg.transform.scale(Config.get_image(item), (90, 90)) for item in self.MENU_ITEMS
+        }
 
-        self.start_time = pg.time.get_ticks()
+    def reset(self):
         self.orders = deque()
 
     def add_order(self):
-        if len(self.orders) < 3:
+        """Add a new random menu item to the queue."""
+        if len(self.orders) < self.max_orders:
             menu_item = random.choice(self.MENU_ITEMS)
             order = {
                 "name": menu_item,
                 "start_time": pg.time.get_ticks(),
-                "duration": 10000,  # Each order lasts 5 seconds
-                "position": (50, 50 + len(self.orders) * 40)  # Stack vertically
+                "duration": 60000,
+                "position": (800 - len(self.orders) * 150, 450)
             }
             self.orders.append(order)
 
     def update(self):
+        """Remove expired orders from the queue."""
         current_time = pg.time.get_ticks()
         while self.orders and current_time - self.orders[0]["start_time"] >= self.orders[0]["duration"]:
             self.orders.popleft()  # Remove expired order
@@ -69,13 +70,19 @@ class Menu:
             self.add_order()
 
     def draw(self, screen):
-        """Render the menu if active."""
+        """Render the menu orders."""
 
         for i, order in enumerate(self.orders):
-            screen.blit(self.background, self.background_position)
+            rect_x = 800 - i * 250  # Move each order left
+            rect_y = 460
 
+            pg.draw.rect(screen, Config.get_config('WHITE'), (rect_x, rect_y, 150, 150), border_radius=15)
+
+            if order["name"] in self.__images:
+                screen.blit(self.__images[order["name"]], (rect_x + 27, rect_y + 10))
+
+            # Draw order name
             text = self.font.render(order["name"], True, Config.get_config('BLACK'))
-            screen.blit(text, (870 - i * 300, 570))  # Update positions dynamically
-
+            screen.blit(text, (rect_x + 50, rect_y + 110))
 
 

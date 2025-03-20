@@ -36,22 +36,28 @@ class Config:
         """Pre-loads and caches all ingredient images."""
         image_paths = {
             "lamb": "images/simply cooked/Raw food/lamb3.png",
-            "lamb_cooked": "images/simply cooked/Cooked food/lamb1.png",
+            "lamb fried": "images/simply cooked/Cooked food/lamb1.png",
 
             "bread": "images/simply cooked/Cooked food/bread1.png",
+            "bread sliced": "images/simply cooked/Cooked food/bread_sliced.png",
             "leek": "images/FarmVeggies/Leek.png",
 
             "egg": "images/simply cooked/Raw food/egg3.png",
-            "egg_fried": "images/simply cooked/Cooked food/egg1.png",
+            "egg fried": "images/simply cooked/Cooked food/egg1.png",
 
             "chicken": "images/simply cooked/Raw food/chiken3.png",
-            "chicken_cooked": "images/simply cooked/Cooked food/chiken1.png",
+            "chicken sliced": "images/simply cooked/Raw food/drumstick3.png",
+
+            "chicken fried": "images/simply cooked/Cooked food/chiken1.png",
+            "chicken drumstick fried": "images/simply cooked/Cooked food/drumstick1.png",
 
             "sandwich": "images/simply cooked/Cooked food/sandwich1.png",
             "tomato": "images/FarmVeggies/Tomato.png",
-            "tomato_sliced": "images/FarmVeggies/Tomatoslice.png",
+            "tomato sliced": "images/FarmVeggies/Tomatoslice.png",
+            "cheese": "images/simply cooked/Cooked food/chees1.png",
+
             "lettuce": "images/FarmVeggies/lettuce.png",
-            "lettuce_sliced": "images/FarmVeggies/lettuceslice.png"
+            "lettuce sliced": "images/FarmVeggies/lettuceslice.png"
 
         }
 

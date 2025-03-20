@@ -32,7 +32,12 @@ class GameApp:
 
         self.__clock = pg.time.Clock()
         self.__game_ui = GameUI()
+
+        self.__restart_button_rect = None
+        self.__exit_button_rect = None
+
         self.__running = True
+        self.__start_game = False
         self.__menu = Menu()
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
@@ -72,7 +77,7 @@ class GameApp:
                         self.__held_ingredient = None
 
                     elif tool == 'cut':
-                        self.__cutting_board.add_ingredient(self.__held_ingredient)
+                        self.__cutting_board.put_ingredient_in_cutting_board(self.__held_ingredient)
                         self.__cutting_board.cut_ingredients()
                         self.__held_ingredient = None
 
@@ -87,10 +92,27 @@ class GameApp:
                     if self.__held_ingredient is None:
                         tool = self.is_near_tool()
                         if tool == 'pan' and self.__pan.is_ready_to_pick():
-                            self.__held_ingredient = self.__pan.take_tool()
+                            self.__held_ingredient = self.__pan.get_cooked_ingredients()
+
+                        if tool == 'cut' and self.__cutting_board.is_ready_to_pick():
+                            self.__held_ingredient = self.__cutting_board.get_cooked_ingredients()
+
+                        if tool == 'plate':
+                            # self.__held_ingredient = self.__plate.
+                            pass
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)
+
+    def restart_game(self):
+        """Reset game state to restart"""
+        GameUI.game_over = False
+        self.__chef.reset()
+        self.__zombie1.reset()
+        self.__held_ingredient = None
+        self.__menu.reset()
+        self.__dropped_ingredient.clear()
+        self.__game_ui.reset()
 
     def drop_food_to_the_world(self):
         """Drop the held ingredient"""
@@ -116,33 +138,81 @@ class GameApp:
 
     def update(self):
         """Update game logic"""
+
         self.__chef.move()
-        self.__zombie1.chase_player(self.__chef)
+        # self.__zombie1.chase_player(self.__chef)
         self.__pan.fry_ingredients()
         self.__menu.update()
         self.__kitchen_map.update()
 
     def render(self):
         """Render game objects"""
-        self.__fridge.draw(self.__screen)
-        self.__plate.draw(self.__screen)
-        self.__pan.draw(self.__screen)
-        self.__pot.draw(self.__screen)
-        self.__cutting_board.draw(self.__screen)
-        self.__zombie1.draw()
-        self.__chef.draw()
-        if self.__held_ingredient:
-            x, y = self.__chef.get_position()
-            self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
 
-        for ingredient in self.__dropped_ingredient:
-            x, y = ingredient.get_position()
-            ingredient.draw_at(self.__screen, x + 10, y)
+        if GameUI.game_over:
+            restart_button, exit_button = GameUI.draw_game_over(self.__screen)
 
-        self.__menu.draw(self.__screen)
-        self.__game_ui.draw_timer(self.__screen)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    exit()
 
-        pg.display.flip()
+                elif event.type == pg.MOUSEBUTTONDOWN:
+                    mouse_pos = pg.mouse.get_pos()
+
+                    if restart_button.collidepoint(mouse_pos):
+                        self.restart_game()
+                        GameUI.game_over = False
+                        return
+
+                    elif exit_button.collidepoint(mouse_pos):
+                        pg.quit()
+                        exit()
+            return
+
+        elif not self.__start_game:
+            restart, stat, exit_ = GameUI.draw_start_game(self.__screen)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.__running = False
+
+                elif event.type == pg.MOUSEBUTTONDOWN:
+                    mouse_pos = pg.mouse.get_pos()
+
+                    if restart.collidepoint(mouse_pos):
+                        print("start button click")
+                        self.__start_game = True
+                        return
+
+                    elif stat.collidepoint(mouse_pos):
+                        # self.show_statistics()  # Function to display statistics
+                        pass
+
+                    elif exit_.collidepoint(mouse_pos):
+                        pg.quit()
+                        exit()
+            return
+
+        elif self.__start_game:
+            self.__fridge.draw(self.__screen)
+            self.__plate.draw(self.__screen)
+            self.__pan.draw(self.__screen)
+            self.__pot.draw(self.__screen)
+            self.__cutting_board.draw(self.__screen)
+            self.__chef.draw()
+            self.__zombie1.draw()
+            if self.__held_ingredient:
+                x, y = self.__chef.get_position()
+                self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
+
+            for ingredient in self.__dropped_ingredient:
+                x, y = ingredient.get_position()
+                ingredient.draw_at(self.__screen, x + 10, y)
+
+            self.__menu.draw(self.__screen)
+            self.__game_ui.draw_timer(self.__screen)
+
+            pg.display.flip()
 
     def run(self):
         while self.__running:

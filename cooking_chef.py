@@ -1,6 +1,7 @@
 import time
 import pygame as pg
 from cooking_config import Config
+from cooking_ui import GameUI
 
 
 class Chef:
@@ -30,6 +31,7 @@ class Chef:
         self.__chef_health = self.__max_health
         self.__chef_sprite = self.__chef_sprite_original
         self.__facing_left = False
+        self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
     def draw(self):
         if self.__screen:
@@ -104,6 +106,9 @@ class Chef:
 
         # Calculate the width of the health bar based on the player's current health
         health_width = (self.__chef_health / self.__max_health) * self.__health_bar_width
+        if health_width <= 0:
+            GameUI.game_over = True
+            GameUI.draw_game_over(self.__screen)
 
         # Draw the filled rectangle representing the player's health
         pg.draw.rect(self.__screen, self.__health_bar_color, (x, y, health_width, self.__health_bar_height))
@@ -112,7 +117,8 @@ class Chef:
 
     def take_damage(self, damage):
         self.__chef_health = max(0, self.__chef_health - damage)
-
+        if self.__chef_health <= 0:
+            GameUI.game_over = True
 
     def heal(self, amount):
         self.__chef_health = min(self.__max_health, self.__chef_health + amount)

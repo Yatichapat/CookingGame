@@ -4,9 +4,8 @@ import random
 
 
 class Zombie:
-    def __init__(self):
-        self.__position = (random.randint(0, Config.get_config('WIN_SIZE_W') - 1),
-                           random.randint(0, Config.get_config('WIN_SIZE_H') - 1))
+    def __init__(self, delay_time=3000):
+        self.__position = (self.spawn_offscreen(Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))
         self.screen = None
 
         self.__image = pg.transform.scale(pg.image.load("images/Zombie_1/Walk_still.png"), (30,70))
@@ -15,13 +14,43 @@ class Zombie:
         self.__chasing = False
         self.__last_attack_time = 0
 
+        self.__spawn_time = pg.time.get_ticks()
+        self.__delay_time = delay_time
+
+    def reset(self):
+        self.__position = (self.spawn_offscreen(Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))
+        self.__speed = 4
+        self.__chasing = False
+        self.zombie_rect = self.__image.get_rect(topleft=self.__position)
+
+        self.__spawn_time = pg.time.get_ticks()
+        self.__delay_time = 3000
+
+    def spawn_offscreen(self, screen_width, screen_height):
+        """Randomly generates a spawn position outside the screen."""
+        side = random.choice(["left", "right", "top", "bottom"])
+
+        if side == "left":
+            return -50, random.randint(0, screen_height)
+        elif side == "right":
+            return screen_width + 50, random.randint(0, screen_height)
+        elif side == "top":
+            return random.randint(0, screen_width), -50
+        else:
+            return random.randint(0, screen_width), screen_height + 50
+
     def move_towards(self, target_x, target_y):
         """Move towards a given (x, y) target."""
+
         dx = target_x - self.zombie_rect.x
         dy = target_y - self.zombie_rect.y
         distance = max(0.1, (dx**2 + dy**2) ** 0.5)  # Prevent division by zero
 
         # Normalize direction and apply speed
+        current_time = pg.time.get_ticks()
+        if current_time - self.__spawn_time < self.__delay_time:
+            return
+
         self.zombie_rect.x += self.__speed * (dx / distance)
         self.zombie_rect.y += self.__speed * (dy / distance)
         self.__position = (self.zombie_rect.x, self.zombie_rect.y)
