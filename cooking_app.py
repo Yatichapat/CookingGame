@@ -26,6 +26,7 @@ class GameApp:
 
         self.__chef.set_screen(self.__screen)
         self.__zombie1.set_screen(self.__screen)
+
         self.__held_ingredient = None
         self.__held_tool = None
         self.__dropped_ingredient = []
@@ -51,12 +52,12 @@ class GameApp:
                 if event.key == pg.K_SPACE:
                     self.__fridge.toggle_fridge(self.__chef)
 
-                elif self.__fridge.is_open:  # Fridge interactions
+                elif self.__fridge.is_open:
                     if event.key == pg.K_LEFT:
                         self.__fridge.move_selection("LEFT")
                     elif event.key == pg.K_RIGHT:
                         self.__fridge.move_selection("RIGHT")
-                    elif event.key == pg.K_RETURN:  # Pick ingredient
+                    elif event.key == pg.K_RETURN:
                         if self.__held_ingredient is None:
                             self.__held_ingredient = self.__fridge.pick_ingredient()
 
@@ -98,8 +99,7 @@ class GameApp:
                             self.__held_ingredient = self.__cutting_board.get_cooked_ingredients()
 
                         if tool == 'plate':
-                            # self.__held_ingredient = self.__plate.
-                            pass
+                            self.__held_ingredient = self.__plate.pick_up_plate()
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)
@@ -180,8 +180,8 @@ class GameApp:
                     mouse_pos = pg.mouse.get_pos()
 
                     if restart.collidepoint(mouse_pos):
-                        print("start button click")
                         self.__start_game = True
+                        self.restart_game()
                         return
 
                     elif stat.collidepoint(mouse_pos):
@@ -197,13 +197,18 @@ class GameApp:
             self.__fridge.draw(self.__screen)
             self.__plate.draw(self.__screen)
             self.__pan.draw(self.__screen)
-            self.__pot.draw(self.__screen)
+            # self.__pot.draw(self.__screen)
             self.__cutting_board.draw(self.__screen)
             self.__chef.draw()
             self.__zombie1.draw()
+
             if self.__held_ingredient:
                 x, y = self.__chef.get_position()
-                self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
+                if isinstance(self.__held_ingredient, list):  # If it's a list, display the first ingredient
+                    for idx, ingredient in enumerate(self.__held_ingredient):
+                        self.__screen.blit(ingredient.images, (x + idx * 10, y + 25))  # Offset to show multiple items
+                else:
+                    self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
 
             for ingredient in self.__dropped_ingredient:
                 x, y = ingredient.get_position()

@@ -56,6 +56,11 @@ class KitchenMap:
         counter_position = (350, 70)
         self.__screen.blit(counter_top_image, counter_position)
 
+        counter_top_image2 = pg.image.load("images/countertop_side.png")
+        counter_top_image2 = pg.transform.scale(counter_top_image2, (80, Config.get_config('WIN_SIZE_H')))
+        counter_position = (600, 300)
+        self.__screen.blit(counter_top_image2, counter_position)
+
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.BACKGROUND_COLOR)

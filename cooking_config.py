@@ -22,7 +22,6 @@ class Config:
         'BACKGROUND': (249, 234, 211),
         'CHARACTER_SIZE': 100,
         'MESSAGE_BACKGROUND': pg.transform.scale(pg.image.load("images/message.png"),(200, 200)),
-        'MAP': pg.transform.scale(pg.image.load("images/map/kitchen16_tan.png"),(200, 200))
     }
 
     __IMAGE_CACHE = {}
@@ -46,6 +45,7 @@ class Config:
             "egg fried": "images/simply cooked/Cooked food/egg1.png",
 
             "chicken": "images/simply cooked/Raw food/chiken3.png",
+            "chicken to slice": "images/simply cooked/Raw food/chiken3.png",
             "chicken sliced": "images/simply cooked/Raw food/drumstick3.png",
 
             "chicken fried": "images/simply cooked/Cooked food/chiken1.png",
@@ -54,7 +54,9 @@ class Config:
             "sandwich": "images/simply cooked/Cooked food/sandwich1.png",
             "tomato": "images/FarmVeggies/Tomato.png",
             "tomato sliced": "images/FarmVeggies/Tomatoslice.png",
+
             "cheese": "images/simply cooked/Cooked food/chees1.png",
+            "cheese sliced": "images/simply cooked/Cooked food/cheese_slice.png",
 
             "lettuce": "images/FarmVeggies/lettuce.png",
             "lettuce sliced": "images/FarmVeggies/lettuceslice.png"

@@ -90,7 +90,7 @@ class Fridge:
 class Equipments:
     def __init__(self, x, y, image_path):
         self.__position = (x, y)
-        self.__ingredients = []  # List of (ingredient, start_time)
+        self.__ingredients = []
         self.__image_path = image_path
 
     def add_ingredient(self, ingredient):
@@ -123,13 +123,21 @@ class Equipments:
 
                 # Handle sliced ingredients
             if ingredient.get_type() == "tomato" and elapsed_time >= 0:
-                print("Tomato slice!")
                 sliced_ingredient = Ingredients(*ingredient.get_position(), "tomato sliced")
 
             elif ingredient.get_type() == "lettuce" and elapsed_time >= 0:
                 sliced_ingredient = Ingredients(*ingredient.get_position(), "lettuce sliced")
 
+            elif ingredient.get_type() == "cheese" and elapsed_time >= 0:
+                sliced_ingredient = Ingredients(*ingredient.get_position(), "cheese sliced")
+
             elif ingredient.get_type() == "chicken" and elapsed_time >= 0:
+                sliced_ingredient = Ingredients(*ingredient.get_position(), "chicken to slice")
+
+            elif ingredient.get_type() == "bread" and elapsed_time >= 0:
+                sliced_ingredient = Ingredients(*ingredient.get_position(), "bread sliced")
+
+            elif ingredient.get_type() == "chicken to slice" and elapsed_time >= 0:
                 sliced_ingredient = Ingredients(*ingredient.get_position(), "chicken sliced")
 
             # Add transformations
@@ -239,8 +247,9 @@ class Plate:
         self.__ingredients = []
 
     def add_ingredient(self, ingredient):
-        if len(self.__ingredients) < 3:
+        if len(self.__ingredients) < 5:
             self.__ingredients.append(ingredient)
+            self.check_and_transform()
 
         else:
             print("plate is full!")
@@ -251,13 +260,15 @@ class Plate:
         return None
 
     def is_complete_menu(self):
-        if len(self.__ingredients) == 5:
-            return (self.__ingredients[0].get_type() == "bread" and
-                    self.__ingredients[1].get_type() == "cheese" and
-                    self.__ingredients[2].get_type() == "lettuce" and
-                    self.__ingredients[3].get_type() == "tomato" and
-                    self.__ingredients[5].get_type() == "bread")
-        return False
+        sandwich_required = {"bread sliced", "cheese sliced", "lettuce sliced", "tomato sliced"}
+        ingredient_types = {ingredient.get_type() for ingredient in self.__ingredients}
+        return sandwich_required.issubset(ingredient_types)
+
+    def check_and_transform(self):
+        if self.is_complete_menu():
+            self.__ingredients.clear()
+            sandwich = Ingredients(*self.__position, "sandwich")
+            self.__ingredients.append(sandwich)
 
     def get_position(self):
         return self.__position
@@ -268,8 +279,15 @@ class Plate:
         plate_image = pg.transform.scale(plate_image, (80, 80))
         screen.blit(plate_image, (plate_x, plate_y))
 
-        for index, ingredient in enumerate(self.__ingredients):
-            ingredient.draw_at(screen, plate_x + 17, plate_y + 10 + (index * 10))
+        for i, ingredient in enumerate(self.__ingredients):
+            ingredient.draw_at(screen, plate_x + 10 + (i + 10), plate_y + 15)
+
+    def pick_up_plate(self):
+        if self.__ingredients:
+            pick_up_items = self.__ingredients[:]
+            self.__ingredients.clear()
+            return pick_up_items
+        return None
 
     def set_position(self, position):
         self.__position = position
