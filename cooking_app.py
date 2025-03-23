@@ -132,6 +132,8 @@ class GameApp:
         self.__menu.reset()
         self.__dropped_ingredient.clear()
         self.__game_ui.reset()
+        self.__fridge.is_open = False
+        self.__start_game = True
 
     def drop_food_to_the_world(self):
         """Drop the held ingredient"""
@@ -170,6 +172,7 @@ class GameApp:
 
         if GameUI.game_over:
             restart_button, exit_button = GameUI.draw_game_over(self.__screen)
+            self.__start_game = False
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
