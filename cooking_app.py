@@ -18,17 +18,19 @@ class GameApp:
 
         self.__zombie1 = Zombie()
 
-        self.__fridge = Fridge(200, 30, self.__chef)
+        self.__fridge = Fridge(190, 30, self.__chef)
         self.__pan = Pan(500, 40)
         self.__pot = Pot(800, 30)
         self.__plate = Plate(600, 50)
         self.__cutting_board = CuttingBoard(700, 50)
+        self.__trash = TrashBin(270, 70)
 
         self.__chef.set_screen(self.__screen)
         self.__zombie1.set_screen(self.__screen)
 
         self.__held_ingredient = None
         self.__held_plate = None
+        self.__plate_pick = False
         self.__dropped_ingredient = []
 
         self.__clock = pg.time.Clock()
@@ -83,8 +85,18 @@ class GameApp:
                         self.__held_ingredient = None
 
                     elif tool == 'plate':
-                        self.__plate.add_ingredient(self.__held_ingredient)
-                        self.__held_ingredient = None
+                        if not self.__plate_pick:
+                            # Add the held ingredient to the plate
+                            if self.__held_ingredient:
+                                self.__plate.add_ingredient(self.__held_ingredient)
+                                self.__held_ingredient = None  # Clear the held ingredient
+                        else:
+                            # Pick up the plate
+                            self.__held_plate = self.__plate.pick_up_plate()
+                            self.__plate_pick = False  # Reset the state
+
+                    elif tool == 'trash':
+                        self.__held_ingredient = None  # Discard the held ingredient
 
                     else:
                         self.drop_food_to_the_world()
@@ -99,7 +111,14 @@ class GameApp:
                             self.__held_ingredient = self.__cutting_board.get_cooked_ingredients()
 
                         if tool == 'plate':
-                            self.__held_ingredient = self.__plate.pick_up_plate()
+                            if not self.__plate_pick:
+                                # Add the held ingredient to the plate
+                                if self.__held_ingredient:
+                                    self.__plate.add_ingredient(self.__held_ingredient)
+                                    self.__held_ingredient = None  # Clear the held ingredient
+
+                                elif self.__held_ingredient is None:
+                                    self.__held_plate = self.__plate.pick_up_plate()
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)
@@ -128,7 +147,8 @@ class GameApp:
             'pan': self.__pan,
             'pot': self.__pot,
             'cut': self.__cutting_board,
-            'plate': self.__plate
+            'plate': self.__plate,
+            'trash': self.__trash
         }
         chef_x, chef_y = self.__chef.get_position()
         nearest_tool = min(tools, key=lambda t: ((chef_x - tools[t].get_position()[0]) ** 2 +
@@ -195,6 +215,7 @@ class GameApp:
 
         elif self.__start_game:
             self.__fridge.draw(self.__screen)
+            self.__trash.draw(self.__screen)
             self.__plate.draw(self.__screen)
             self.__pan.draw(self.__screen)
             # self.__pot.draw(self.__screen)
@@ -204,15 +225,16 @@ class GameApp:
 
             if self.__held_ingredient:
                 x, y = self.__chef.get_position()
-                if isinstance(self.__held_ingredient, list):  # If it's a list, display the first ingredient
-                    for idx, ingredient in enumerate(self.__held_ingredient):
-                        self.__screen.blit(ingredient.images, (x + idx * 10, y + 25))  # Offset to show multiple items
-                else:
-                    self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
+                self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
 
             for ingredient in self.__dropped_ingredient:
                 x, y = ingredient.get_position()
                 ingredient.draw_at(self.__screen, x + 10, y)
+
+            if self.__held_plate:
+                x, y = self.__chef.get_position()
+                self.__held_plate.set_position((x, y))
+                self.__held_plate.draw(self.__screen)
 
             self.__menu.draw(self.__screen)
             self.__game_ui.draw_timer(self.__screen)

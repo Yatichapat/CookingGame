@@ -5,10 +5,8 @@ import pygame as pg
 
 class Fridge:
     def __init__(self, x, y, chef):
-        self.__x = x
-        self.__y = y
         chef_x, chef_y = chef.get_position()
-        self.__position = (self.__x, self.__y)
+        self.__position = (x, y)
         self.__ingredients = [
             Ingredients(2, 10, "lamb"),
             Ingredients(2, 4, "bread"),
@@ -240,54 +238,79 @@ class CuttingBoard(Equipments):
         return self.cook_ingredients()
 
 
-
 class Plate:
     def __init__(self, x, y):
         self.__position = (x, y)
-        self.__ingredients = []
+        self.__ingredients = []  # List to store ingredients on the plate
 
     def add_ingredient(self, ingredient):
-        if len(self.__ingredients) < 5:
+        """Add an ingredient to the plate."""
+        if len(self.__ingredients) < 5:  # Limit the number of ingredients on the plate
             self.__ingredients.append(ingredient)
             self.check_and_transform()
-
+            return True  # Ingredient added successfully
         else:
-            print("plate is full!")
+            return False  # Plate is full
 
     def remove_ingredient(self):
+        """Remove and return the last ingredient added to the plate."""
         if self.__ingredients:
             return self.__ingredients.pop()
         return None
 
     def is_complete_menu(self):
+        """Check if the plate contains a complete dish (e.g., sandwich)."""
         sandwich_required = {"bread sliced", "cheese sliced", "lettuce sliced", "tomato sliced"}
         ingredient_types = {ingredient.get_type() for ingredient in self.__ingredients}
         return sandwich_required.issubset(ingredient_types)
 
     def check_and_transform(self):
+        """Check if the plate contains a complete dish and transform it."""
         if self.is_complete_menu():
             self.__ingredients.clear()
             sandwich = Ingredients(*self.__position, "sandwich")
             self.__ingredients.append(sandwich)
 
     def get_position(self):
+        """Get the position of the plate."""
         return self.__position
 
     def draw(self, screen):
+        """Draw the plate and its ingredients on the screen."""
         plate_x, plate_y = self.__position
         plate_image = pg.image.load("images/plate.png")
-        plate_image = pg.transform.scale(plate_image, (80, 80))
+        plate_image = pg.transform.scale(plate_image, (80, 80))  # Plate size
         screen.blit(plate_image, (plate_x, plate_y))
 
+        # Draw ingredients on the plate in a grid-like layout
         for i, ingredient in enumerate(self.__ingredients):
-            ingredient.draw_at(screen, plate_x + 10 + (i + 10), plate_y + 15)
+            row = i // 2  # Two ingredients per row
+            col = i % 2
+            ingredient_x = plate_x + 20  # Adjust spacing as needed
+            ingredient_y = plate_y + 10 + row
+            screen.blit(ingredient.images, (ingredient_x, ingredient_y))
 
     def pick_up_plate(self):
-        if self.__ingredients:
-            pick_up_items = self.__ingredients[:]
-            self.__ingredients.clear()
-            return pick_up_items
-        return None
+        """Pick up the plate and return the Plate object itself."""
+        return self  # Return the Plate object
 
     def set_position(self, position):
+        """Set the position of the plate."""
         self.__position = position
+
+    def get_ingredients(self):
+        """Get the list of ingredients on the plate."""
+        return self.__ingredients
+
+
+class TrashBin:
+    def __init__(self, x, y):
+        self.__position = (x, y)
+        self.__image = pg.image.load("images/trashbin.png")
+        self.__image = pg.transform.scale(self.__image, (100, 100))
+
+    def draw(self, screen):
+        screen.blit(self.__image, self.__position)
+
+    def get_position(self):
+        return self.__position
