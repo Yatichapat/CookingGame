@@ -63,12 +63,20 @@ class KitchenMap:
         counter_position2 = (935, 250)
         self.__screen.blit(counter_top_image2, counter_position2)
 
+    def draw_red_button(self):
+        red_button_image = pg.image.load('images/red_button.png')
+        red_button_image = pg.transform.scale(red_button_image, (100, 100))
+
+        red_button_position = (915, 300)
+        self.__screen.blit(red_button_image, red_button_position)
+
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.BACKGROUND_COLOR)
         self.draw_tiles()  # Draw the grid
         self.draw_wall()
         self.draw_counter_top()
+        self.draw_red_button()
         self.draw_menu_block()
 
 

@@ -17,6 +17,7 @@ class Chef:
         self.__health_bar_height = 10
         self.__health_bar_color = Config.get_config('GREEN')
         self.__background_color = Config.get_config('WHITE')
+        self.__held_plate = None
 
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
         self.__chef_sprite_original = pg.transform.scale(pg.image.load("images/player.png"), (40, 80))
@@ -24,6 +25,8 @@ class Chef:
         self.__chef_rect = self.__chef_sprite.get_rect(center=self.__position)
         self.__facing_left = False
 
+        self.__keystrokes = 0
+        self.__dish_start_time = None
 
     def reset(self):
         self.__position = (Config.get_config('WIN_SIZE_W') // 2, Config.get_config('WIN_SIZE_H') // 2)
@@ -32,6 +35,9 @@ class Chef:
         self.__chef_sprite = self.__chef_sprite_original
         self.__facing_left = False
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
+
+        self.__keystrokes = 0
+        self.__dish_start_time = None
 
     def draw(self):
         if self.__screen:
@@ -58,7 +64,7 @@ class Chef:
                 self.update_sprite(flip=False)
 
         # Keep the chef inside the screen boundaries
-        self.__chef_rect.x = max(220, min(self.__chef_rect.x, Config.get_config('WIN_SIZE_W') - Config.get_config('GRID_SIZE_W')))
+        self.__chef_rect.x = max(220, min(self.__chef_rect.x, Config.get_config('WIN_SIZE_W') - 100))
         self.__chef_rect.y = max(100, min(self.__chef_rect.y, Config.get_config('WIN_SIZE_H') - Config.get_config('GRID_SIZE_H')))
 
         self.__position = self.__chef_rect.topleft  # Update position after movement
@@ -125,3 +131,8 @@ class Chef:
 
     def get_rect(self):
         return self.__chef_rect
+
+    def pick_up_plate(self, plate):
+        """Pick up a plate and its ingredients."""
+        if not self.__held_plate:
+            self.__held_plate = plate

@@ -28,7 +28,7 @@ class GameApp:
         self.__zombie1.set_screen(self.__screen)
 
         self.__held_ingredient = None
-        self.__held_tool = None
+        self.__held_plate = None
         self.__dropped_ingredient = []
 
         self.__clock = pg.time.Clock()
