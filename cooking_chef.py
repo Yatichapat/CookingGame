@@ -83,23 +83,23 @@ class Chef:
             return
 
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_UP:
+            if event.key == pg.K_w:
                 self.movement['UP'] = True
-            elif event.key == pg.K_DOWN:
+            elif event.key == pg.K_s:
                 self.movement['DOWN'] = True
-            elif event.key == pg.K_LEFT:
+            elif event.key == pg.K_a:
                 self.movement['LEFT'] = True
-            elif event.key == pg.K_RIGHT:
+            elif event.key == pg.K_d:
                 self.movement['RIGHT'] = True
 
         elif event.type == pg.KEYUP:
-            if event.key == pg.K_UP:
+            if event.key == pg.K_w:
                 self.movement['UP'] = False
-            elif event.key == pg.K_DOWN:
+            elif event.key == pg.K_s:
                 self.movement['DOWN'] = False
-            elif event.key == pg.K_LEFT:
+            elif event.key == pg.K_a:
                 self.movement['LEFT'] = False
-            elif event.key == pg.K_RIGHT:
+            elif event.key == pg.K_d:
                 self.movement['RIGHT'] = False
 
     def update_sprite(self, flip=False):
@@ -136,3 +136,4 @@ class Chef:
         """Pick up a plate and its ingredients."""
         if not self.__held_plate:
             self.__held_plate = plate
+            

@@ -21,6 +21,22 @@ class Fridge:
         self.__dropped_ingredients = []
         self.__select_index = 0
 
+    def reset(self):
+        self.is_open = False
+        self.__select_index = 0
+        self.__ingredients.clear()
+
+        self.__ingredients = [
+            Ingredients(2, 10, "lamb"),
+            Ingredients(2, 4, "bread"),
+            Ingredients(2, 8, "leek"),
+            Ingredients(2, 6, "egg"),
+            Ingredients(4, 10, "chicken"),
+            Ingredients(2, 10, "lettuce"),
+            Ingredients(2, 10, "tomato"),
+            Ingredients(0, 0, "cheese")
+        ]
+
     def toggle_fridge(self, chef):
         """Opens or closes the fridge."""
         fridge_x, fridge_y = self.__position
@@ -91,6 +107,9 @@ class Equipments:
         self.__ingredients = []
         self.__image_path = image_path
 
+    def clear(self):
+        return self.__ingredients.clear()
+
     def add_ingredient(self, ingredient):
         """Adds an ingredient to the cooking tool and starts the timer."""
         start_time = pg.time.get_ticks()  # Start time when the ingredient is added
@@ -99,54 +118,42 @@ class Equipments:
     def cook_ingredients(self):
         """Cooks ingredients based on real-time duration."""
         transformed_items = []
-        current_time = pg.time.get_ticks()  # Get the current time
-
+        current_time = pg.time.get_ticks()
         new_ingredients = []
+
         for ingredient, start_time in self.__ingredients:
             elapsed_time = (current_time - start_time) / 1000
-            cooked_ingredient = None
-            sliced_ingredient = None
+            transformed = None
 
-            if ingredient.get_type() == "egg" and elapsed_time >= 0:
-                cooked_ingredient = Ingredients(*ingredient.get_position(), "egg fried")
+            # FRYING LOGIC (primarily for Pan)
+            if isinstance(self, Pan):
+                if ingredient.get_type() == "egg" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "egg fried")
+                elif ingredient.get_type() == "lamb" and elapsed_time >= 8:
+                    transformed = Ingredients(*ingredient.get_position(), "lamb fried")
+                elif ingredient.get_type() == "chicken" and elapsed_time >= 8:
+                    transformed = Ingredients(*ingredient.get_position(), "chicken fried")
+                elif ingredient.get_type() == "chicken sliced" and elapsed_time >= 8:
+                    transformed = Ingredients(*ingredient.get_position(), "chicken drumstick fried")
 
-            elif ingredient.get_type() == "lamb" and elapsed_time >= 8:
-                cooked_ingredient = Ingredients(*ingredient.get_position(), "lamb fried")
+            # SLICING LOGIC (primarily for CuttingBoard)
+            elif isinstance(self, CuttingBoard):
+                if ingredient.get_type() == "tomato" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "tomato sliced")
+                elif ingredient.get_type() == "lettuce" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "lettuce sliced")
+                elif ingredient.get_type() == "cheese" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "cheese sliced")
+                elif ingredient.get_type() == "chicken" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "chicken sliced")
+                elif ingredient.get_type() == "bread" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "bread sliced")
+                elif ingredient.get_type() == "chicken to slice" and elapsed_time >= 0:
+                    transformed = Ingredients(*ingredient.get_position(), "chicken sliced")
 
-            elif ingredient.get_type() == "chicken" and elapsed_time >= 8:
-                cooked_ingredient = Ingredients(*ingredient.get_position(), "chicken fried")
-
-            elif ingredient.get_type() == "chicken sliced" and elapsed_time >= 8:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "chicken drumstick fried")
-
-                # Handle sliced ingredients
-            if ingredient.get_type() == "tomato" and elapsed_time >= 0:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "tomato sliced")
-
-            elif ingredient.get_type() == "lettuce" and elapsed_time >= 0:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "lettuce sliced")
-
-            elif ingredient.get_type() == "cheese" and elapsed_time >= 0:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "cheese sliced")
-
-            elif ingredient.get_type() == "chicken" and elapsed_time >= 0:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "chicken to slice")
-
-            elif ingredient.get_type() == "bread" and elapsed_time >= 0:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "bread sliced")
-
-            elif ingredient.get_type() == "chicken to slice" and elapsed_time >= 0:
-                sliced_ingredient = Ingredients(*ingredient.get_position(), "chicken sliced")
-
-            # Add transformations
-            if cooked_ingredient:
-                transformed_items.append((ingredient, cooked_ingredient))
-                new_ingredients.append([cooked_ingredient, start_time])
-
-            elif sliced_ingredient:
-                transformed_items.append((ingredient, sliced_ingredient))
-                new_ingredients.append([sliced_ingredient, start_time])
-
+            if transformed:
+                transformed_items.append((ingredient, transformed))
+                new_ingredients.append([transformed, start_time])
             else:
                 new_ingredients.append([ingredient, start_time])
 
@@ -243,6 +250,9 @@ class Plate:
         self.__position = (x, y)
         self.__ingredients = []  # List to store ingredients on the plate
 
+    def clear(self):
+        return self.__ingredients.clear()
+
     def add_ingredient(self, ingredient):
         """Add an ingredient to the plate."""
         if len(self.__ingredients) < 5:  # Limit the number of ingredients on the plate
@@ -291,8 +301,13 @@ class Plate:
             screen.blit(ingredient.images, (ingredient_x, ingredient_y))
 
     def pick_up_plate(self):
-        """Pick up the plate and return the Plate object itself."""
-        return self  # Return the Plate object
+        if not self.__ingredients:  # Don't pick up empty plates
+            return None
+
+        new_plate = Plate(*self.__position)
+        new_plate.__ingredients = self.__ingredients.copy()
+        self.__ingredients.clear()  # Clear the original plate
+        return new_plate
 
     def set_position(self, position):
         """Set the position of the plate."""

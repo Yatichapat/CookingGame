@@ -10,7 +10,7 @@ class Zombie:
 
         self.__image = pg.transform.scale(pg.image.load("images/Zombie_1/Walk_still.png"), (30,70))
         self.zombie_rect = self.__image.get_rect(topleft=self.__position)
-        self.__speed = 4
+        self.__speed = 2
         self.__chasing = False
         self.__last_attack_time = 0
 
@@ -19,7 +19,7 @@ class Zombie:
 
     def reset(self):
         self.__position = (self.spawn_offscreen(Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))
-        self.__speed = 4
+        self.__speed = 2
         self.__chasing = False
         self.zombie_rect = self.__image.get_rect(topleft=self.__position)
 

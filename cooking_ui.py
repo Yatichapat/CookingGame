@@ -8,10 +8,10 @@ class KitchenMap:
         self.__tile_size = 60
         self.__screen = screen
 
-        self.GRID_COLOR = Config.get_config('GRAY')  # Color for grid lines
-        self.BACKGROUND_COLOR = Config.get_config('BACKGROUND')  # Background color for the screen
-        self.SIDEBAR_COLOR = Config.get_config('PASTEL_GRAY')  # Color for the sidebar
-        self.SIDEBAR_WIDTH = 220  # Width of the sidebar (set to 200 pixels)
+        self.__grid_color = Config.get_config('GRAY')
+        self.__background_color = Config.get_config('BACKGROUND')
+        self.__sidebar_color = Config.get_config('PASTEL_GRAY')
+        self.__sidebar_width = 220
         self.__line_color = Config.get_config('BLACK')
 
     def draw_tiles(self):
@@ -27,20 +27,20 @@ class KitchenMap:
                 pg.draw.rect(self.__screen, color, (x, y, self.__tile_size, self.__tile_size))
 
         for y in range(0, window_height, self.__tile_size):
-            pg.draw.line(self.__screen, self.GRID_COLOR, (0, y), (window_width, y), 4)  # Line width set to 4
+            pg.draw.line(self.__screen, self.__grid_color, (0, y), (window_width, y), 4)  # Line width set to 4
 
         for x in range(0, window_width, self.__tile_size):
-            pg.draw.line(self.__screen, self.GRID_COLOR, (x, 0), (x, window_height), 4)  # Line width set to 4
+            pg.draw.line(self.__screen, self.__grid_color, (x, 0), (x, window_height), 4)  # Line width set to 4
 
     def draw_menu_block(self):
         window_width = Config.get_config('WIN_SIZE_W')
         window_height = Config.get_config('WIN_SIZE_H')
 
-        pg.draw.rect(self.__screen, self.SIDEBAR_COLOR,
-                     (0, 0, self.SIDEBAR_WIDTH, window_height))  # Sidebar on the left
+        pg.draw.rect(self.__screen, self.__sidebar_color,
+                     (0, 0, self.__sidebar_width, window_height))  # Sidebar on the left
 
         pg.draw.line(self.__screen, self.__line_color,
-                     (self.SIDEBAR_WIDTH, 0), (self.SIDEBAR_WIDTH, window_height), 4)  # Line width set to 4
+                     (self.__sidebar_width, 0), (self.__sidebar_width, window_height), 4)  # Line width set to 4
 
     def draw_wall(self):
         wall_width = Config.get_config('WIN_SIZE_W')
@@ -58,9 +58,9 @@ class KitchenMap:
 
         counter_top_image2 = pg.image.load("images/countertop.png")
         counter_top_image2 = pg.transform.rotate(counter_top_image2,90)
-        counter_top_image2 = pg.transform.scale(counter_top_image2, (80, Config.get_config('WIN_SIZE_H') - 200))
+        counter_top_image2 = pg.transform.scale(counter_top_image2, (100, Config.get_config('WIN_SIZE_H') - 200))
 
-        counter_position2 = (935, 250)
+        counter_position2 = (935, 150)
         self.__screen.blit(counter_top_image2, counter_position2)
 
     def draw_red_button(self):
@@ -70,12 +70,20 @@ class KitchenMap:
         red_button_position = (915, 300)
         self.__screen.blit(red_button_image, red_button_position)
 
+    def draw_stove(self):
+        stove_image = pg.image.load('images/stove.png')
+        stove_image = pg.transform.scale(stove_image, (100, 100))
+
+        stove_position = (490, 60)
+        self.__screen.blit(stove_image, stove_position)
+
     def update(self):
         """Update the map by drawing tiles."""
-        self.__screen.fill(self.BACKGROUND_COLOR)
+        self.__screen.fill(self.__background_color)
         self.draw_tiles()  # Draw the grid
         self.draw_wall()
         self.draw_counter_top()
+        self.draw_stove()
         self.draw_red_button()
         self.draw_menu_block()
 
