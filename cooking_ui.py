@@ -80,7 +80,7 @@ class KitchenMap:
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.__background_color)
-        self.draw_tiles()  # Draw the grid
+        self.draw_tiles()
         self.draw_wall()
         self.draw_counter_top()
         self.draw_stove()
@@ -94,10 +94,15 @@ class GameUI:
     def __init__(self):
         self.__start_time = pg.time.get_ticks()
         self.__game_time = 60
+        self.__score = 0
+
+    def get_score(self):
+        return self.__score
 
     def reset(self):
         self.__start_time = pg.time.get_ticks()
-        self.__game_time = 60
+        GameUI.game_over = False
+        self.__score = 0
 
     def update_time(self):
         elapsed_time = (pg.time.get_ticks() - self.__start_time) // 1000
@@ -119,42 +124,59 @@ class GameUI:
         screen.blit(timer_surface, (10, 550))  # Draw timer at top-left corner
 
     @staticmethod
-    def draw_game_over(screen):
-        # Display Game Over message
+    def draw_game_over(screen, final_score=0):
+        """Display Game Over message with final score"""
         if GameUI.game_over:
-            font = pg.font.SysFont(None, 72)
-            button_font = pg.font.SysFont(None, 50)
+            # Setup fonts
+            large_font = pg.font.SysFont('Arial', 72, bold=True)
+            medium_font = pg.font.SysFont('Arial', 48)
+            button_font = pg.font.SysFont('Arial', 42)
 
             screen_width = Config.get_config('WIN_SIZE_W')
             screen_height = Config.get_config('WIN_SIZE_H')
 
+            # Create semi-transparent overlay
+            overlay = pg.Surface((screen_width, screen_height), pg.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))  # Semi-transparent black
+            screen.blit(overlay, (0, 0))
+
+            # Create main panel
+            panel_rect = pg.Rect(
+                screen_width // 2 - 250,
+                screen_height // 2 - 200,
+                500,
+                400
+            )
+            pg.draw.rect(screen, Config.get_config('PASTEL_GRAY'), panel_rect, border_radius=15)
+            pg.draw.rect(screen, Config.get_config('BLACK'), panel_rect, 3, border_radius=15)
+
             # Game Over text
-            game_over_text = font.render("Game Over", True, Config.get_config('BLACK'))
+            game_over_text = large_font.render("GAME OVER", True, Config.get_config('RED'))
             text_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 3))
+            screen.blit(game_over_text, text_rect)
+
+            # Final Score text
+            score_text = medium_font.render(f"Final Score: {final_score}", True, Config.get_config('BLACK'))
+            score_rect = score_text.get_rect(center=(screen_width // 2, screen_height // 2))
+            screen.blit(score_text, score_rect)
 
             # Button dimensions
             button_width = 200
             button_height = 60
             button_x = (screen_width - button_width) // 2  # Centered horizontally
 
-            restart_button_rect = pg.Rect(button_x, screen_height // 2, button_width, button_height)
-            exit_button_rect = pg.Rect(button_x, screen_height // 2 + 80, button_width, button_height)
-
-            # Fill background
-            screen.fill(Config.get_config('WHITE'))
-
-            # Draw text
-            screen.blit(game_over_text, text_rect)
-
-            # Draw buttons
-            pg.draw.rect(screen, Config.get_config('GRAY'), restart_button_rect)
-            pg.draw.rect(screen, Config.get_config('GRAY'), exit_button_rect)
-
-            # Render button text
-            restart_text = button_font.render("Restart", True, Config.get_config('BLACK'))
-            exit_text = button_font.render("Exit", True, Config.get_config('BLACK'))
-
+            # Restart button (green)
+            restart_button_rect = pg.Rect(button_x, screen_height // 2 + 80, button_width, button_height)
+            pg.draw.rect(screen, (50, 200, 50), restart_button_rect, border_radius=10)
+            pg.draw.rect(screen, Config.get_config('BLACK'), restart_button_rect, 2, border_radius=10)
+            restart_text = button_font.render("Restart", True, Config.get_config('WHITE'))
             screen.blit(restart_text, restart_text.get_rect(center=restart_button_rect.center))
+
+            # Exit button (red)
+            exit_button_rect = pg.Rect(button_x, screen_height // 2 + 160, button_width, button_height)
+            pg.draw.rect(screen, (200, 50, 50), exit_button_rect, border_radius=10)
+            pg.draw.rect(screen, Config.get_config('BLACK'), exit_button_rect, 2, border_radius=10)
+            exit_text = button_font.render("Exit", True, Config.get_config('WHITE'))
             screen.blit(exit_text, exit_text.get_rect(center=exit_button_rect.center))
 
             pg.display.flip()

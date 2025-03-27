@@ -2,6 +2,8 @@ from cooking_config import Config
 import pygame as pg
 import random
 from collections import deque
+import csv
+from datetime import datetime
 
 
 class Ingredients:
@@ -48,9 +50,8 @@ class Menu:
             item: pg.transform.scale(Config.get_image(item), (90, 90)) for item in self.MENU_ITEMS
         }
 
-    def set_serving_pad(self, serving_pad):
-        """Connect the serving pad to the menu system"""
-        self.__serving_pad = serving_pad
+        self.__complete_orders = []
+        self.__session_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def serve_dish(self, plate):
         """Check if plate matches any order and calculate score"""
@@ -65,7 +66,7 @@ class Menu:
                 break
 
         if not prepared_type:
-            return 0  # Plate doesn't contain a valid dish
+            return 0
 
         # Find matching order (FIFO)
         for order in self.orders:
@@ -115,6 +116,9 @@ class Menu:
         """Display current score on screen"""
         score_text = self.font_score.render(f"Score: {self.__score}", True, Config.get_config('BLACK'))
         screen.blit(score_text, (10, 460))
+
+    def get_score(self):
+        return self.__score
 
     def draw(self, screen):
         """Render the menu orders."""

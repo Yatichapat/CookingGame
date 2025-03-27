@@ -47,6 +47,7 @@ class GameApp:
         self.__serving = Serving(945, 150, self.__screen, self.__menu)
 
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
+        self.__final_score = 0
 
     def handle_events(self):
         """Handle user input"""
@@ -81,6 +82,7 @@ class GameApp:
 
                         elif tool == 'cut':
                             self.__cutting_board.put_ingredient_in_cutting_board(self.__held_ingredient)
+                            self.__cutting_board.cook_ingredients()
                             self.__held_ingredient = None
 
                         elif tool == 'plate':
@@ -120,8 +122,6 @@ class GameApp:
                             if self.__held_plate:  # If holding a plate, try to place it
                                 if self.__serving.add_plate(self.__held_plate):
                                     self.__held_plate = None
-                            else:  # If not holding plate, serve existing plates
-                                self.__serving.serve()
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)
@@ -140,6 +140,7 @@ class GameApp:
         self.__cutting_board.clear()
         self.__fridge.reset()
         self.__start_game = True
+        self.__final_score = 0
 
     def drop_food_to_the_world(self):
         """Drop the held ingredient"""
@@ -177,7 +178,7 @@ class GameApp:
         """Update game logic"""
 
         self.__chef.move()
-        # self.__zombie1.chase_player(self.__chef)
+        self.__zombie1.chase_player(self.__chef)
         self.__pan.fry_ingredients()
         self.__menu.update()
         self.__kitchen_map.update()
@@ -187,7 +188,8 @@ class GameApp:
         """Render game objects"""
 
         if GameUI.game_over:
-            restart_button, exit_button = GameUI.draw_game_over(self.__screen)
+            self.__final_score = self.__menu.get_score()
+            restart_button, exit_button = GameUI.draw_game_over(self.__screen, self.__final_score)
             self.__start_game = False
 
             for event in pg.event.get():
@@ -200,7 +202,6 @@ class GameApp:
 
                     if restart_button.collidepoint(mouse_pos):
                         self.restart_game()
-                        GameUI.game_over = False
                         return
 
                     elif exit_button.collidepoint(mouse_pos):
@@ -209,7 +210,7 @@ class GameApp:
             return
 
         elif not self.__start_game:
-            restart, stat, exit_ = GameUI.draw_start_game(self.__screen)
+            restart, stat, exit_to_main = GameUI.draw_start_game(self.__screen)
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -227,9 +228,9 @@ class GameApp:
                         # self.show_statistics()  # Function to display statistics
                         pass
 
-                    elif exit_.collidepoint(mouse_pos):
-                        pg.quit()
-                        exit()
+                    elif exit_to_main.collidepoint(mouse_pos):
+                        self.__start_game = False
+                        GameUI.game_over = False
             return
 
         elif self.__start_game:
@@ -238,6 +239,8 @@ class GameApp:
             self.__plate.draw(self.__screen)
             self.__pan.draw(self.__screen)
             self.__cutting_board.draw(self.__screen)
+
+            self.__serving.draw_pad()
 
             self.__chef.draw()
             self.__zombie1.draw()
@@ -255,20 +258,23 @@ class GameApp:
                 self.__held_plate.set_position((x + 10, y))
                 self.__held_plate.draw(self.__screen)
 
-            self.__serving.draw_pad()
-            self.__serving.draw_feedback()
+
 
             self.__menu.draw(self.__screen)
             self.__menu.draw_score(self.__screen)
             self.__game_ui.draw_timer(self.__screen)
+            self.__serving.draw_feedback()
 
             pg.display.flip()
 
     def run(self):
         while self.__running:
-            self.render()
-            self.handle_events()
-            self.update()
+            if not self.__start_game and not GameUI.game_over:
+                self.render()
+            else:
+                self.render()
+                self.handle_events()
+                self.update()
             self.__clock.tick(Config.get_config('FPS'))
         pg.quit()
 

@@ -34,7 +34,7 @@ class Serving:
 
     def update(self):
         """Handle automatic serving after delay"""
-        if self.__serving and (pg.time.get_ticks() - self.__serve_timer) > 2000:  # 2 second delay
+        if self.__serving:  # 2 second delay
             self.serve()
             self.__serving = False
 
@@ -61,7 +61,7 @@ class Serving:
         self.__last_serve_success = points > 0
         self.__last_serve_points = points
 
-        return served_plate
+        return points
 
     def draw_feedback(self):
         """Draw floating score text"""
@@ -77,7 +77,7 @@ class Serving:
             y_offset = min(50, (pg.time.get_ticks() - self.__last_serve_time) // 20)
             self.__screen.blit(
                 text_surface,
-                (self.__position[0] + 20, self.__position[1] - y_offset)
+                (self.__position[0] + 5, self.__position[1] - y_offset)
             )
 
     def calculate_score(self, plate):
