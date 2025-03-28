@@ -47,6 +47,9 @@ class Fridge:
         if distance <= 200:
             self.is_open = not self.is_open
 
+        if not self.is_open:
+            chef._update_movement_from_states()
+
     def move_selection(self, direction):
         """Moves selection up/down in the fridge."""
         if self.is_open:

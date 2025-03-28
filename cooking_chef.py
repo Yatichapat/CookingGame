@@ -20,6 +20,8 @@ class Chef:
         self.__held_plate = None
 
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
+        self.__key_states = {pg.K_w: False, pg.K_s: False, pg.K_a: False, pg.K_d: False}
+
         self.__chef_sprite_original = pg.transform.scale(pg.image.load("images/player.png"), (40, 80))
         self.__chef_sprite = self.__chef_sprite_original
         self.__chef_rect = self.__chef_sprite.get_rect(center=self.__position)
@@ -78,29 +80,32 @@ class Chef:
 
     def handle_input(self, event, fridge_open):
         """Handle keyboard input for movement"""
-        if fridge_open:
-            # Ignore movement input if fridge is open
-            return
-
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_w:
-                self.movement['UP'] = True
-            elif event.key == pg.K_s:
-                self.movement['DOWN'] = True
-            elif event.key == pg.K_a:
-                self.movement['LEFT'] = True
-            elif event.key == pg.K_d:
-                self.movement['RIGHT'] = True
+            if event.key in self.__key_states:
+                self.__key_states[event.key] = True
+                if not fridge_open:
+                    self._update_movement_from_states()
 
         elif event.type == pg.KEYUP:
-            if event.key == pg.K_w:
-                self.movement['UP'] = False
-            elif event.key == pg.K_s:
-                self.movement['DOWN'] = False
-            elif event.key == pg.K_a:
-                self.movement['LEFT'] = False
-            elif event.key == pg.K_d:
-                self.movement['RIGHT'] = False
+            if event.key in self.__key_states:
+                self.__key_states[event.key] = False
+                if not fridge_open:
+                    self._update_movement_from_states()
+
+    def _update_movement_from_states(self):
+        """Update movement flags based on current key states"""
+        self.movement['UP'] = self.__key_states[pg.K_w]
+        self.movement['DOWN'] = self.__key_states[pg.K_s]
+        self.movement['LEFT'] = self.__key_states[pg.K_a]
+        self.movement['RIGHT'] = self.__key_states[pg.K_d]
+
+        # Update sprite direction if needed
+        if self.movement['LEFT'] and not self.__facing_left:
+            self.__facing_left = True
+            self.update_sprite(flip=True)
+        elif self.movement['RIGHT'] and self.__facing_left:
+            self.__facing_left = False
+            self.update_sprite(flip=False)
 
     def update_sprite(self, flip=False):
         """Flip sprite when changing direction"""
