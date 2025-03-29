@@ -48,10 +48,7 @@ class Menu:
         self.__serving_pad = None
         self.__score = 0
 
-        self.__completed_dishes = []
-        self.__session_start = time.time()
-        self.__current_minute = 0
-        self.__dishes_this_minute = 0
+        self.__menu_appearance = {item: 0 for item in self.MENU_ITEMS}
         self.__last_save_time = time.time()
 
         self.__images = {
@@ -86,42 +83,22 @@ class Menu:
                 points = 10 + time_bonus
                 self.__score += points
 
-                # Update minute tracking
-                self._update_minute_tracking()
                 return points
 
         return 0
-
-    def _update_minute_tracking(self):
-        """Internal method to handle minute-by-minute tracking"""
-        current_time = time.time()
-        elapsed_minutes = int((current_time - self.__session_start) / 60)
-
-        # If new minute, save previous minute's data
-        if elapsed_minutes > self.__current_minute:
-            self.__completed_dishes.append({
-                'minute': self.__current_minute,
-                'dishes': self.__dishes_this_minute,
-                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
-            self.__current_minute = elapsed_minutes
-            self.__dishes_this_minute = 0
-
-            # Auto-save every 1 minutes
-            if elapsed_minutes % 1 == 0:
-                self.save_to_order_per_minute()
-
-        self.__dishes_this_minute += 1
 
     def reset(self):
         self.orders = deque()
         self.__score = 0
         self.save_to_order_per_minute()
+        self.__menu_appearance = {item: 0 for item in self.MENU_ITEMS}
 
     def add_order(self):
         """Add a new random menu item to the queue."""
         if len(self.orders) < self.max_orders:
             menu_item = random.choice(self.MENU_ITEMS)
+            self.__menu_appearance[menu_item] += 1
+
             order = {
                 "name": menu_item,
                 "start_time": pg.time.get_ticks(),
@@ -129,6 +106,11 @@ class Menu:
                 "position": (800 - len(self.orders) * 150, 450)
             }
             self.orders.append(order)
+
+            # Auto-save every 1 minutes
+            if time.time() - self.__last_save_time > 60:
+                self.save_to_order_per_minute()
+                self.__last_save_time = time.time()
 
     def update(self):
         """Remove expired orders and add new ones"""
@@ -189,31 +171,23 @@ class Menu:
 
     def save_to_order_per_minute(self, force_save=False):
         """Save statistics to CSV, with option to force immediate save"""
-        if not self.__completed_dishes and not force_save:
-            return
-
         filename = "order_per_minute.csv"
         try:
             file_exists = os.path.exists(filename)
 
             with open(filename, 'a', newline='') as csvfile:
-                fieldnames = ['timestamp', 'minute', 'dishes', 'score']
+                fieldnames = ['timestamp'] + self.MENU_ITEMS
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 if not file_exists:
                     writer.writeheader()
 
-                for record in self.__completed_dishes:
-                    writer.writerow({
-                        'timestamp': record['timestamp'],
-                        'minute': record['minute'],
-                        'dishes': record['dishes'],
-                    })
+                record = {'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+                record.update(self.__menu_appearance)
+                writer.writerow(record)
 
-            # Clear saved records
-            self.__completed_dishes = []
             self.__last_save_time = time.time()
 
         except Exception as e:
-            print(f"Error saving dish stats: {e}")
+            print(f"Error saving menu appearances: {e}")
 
