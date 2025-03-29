@@ -93,7 +93,7 @@ class GameUI:
 
     def __init__(self):
         self.__start_time = pg.time.get_ticks()
-        self.__game_time = 60
+        self.__game_time = 180
 
     def reset(self):
         self.__start_time = pg.time.get_ticks()

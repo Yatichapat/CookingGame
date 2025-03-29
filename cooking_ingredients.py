@@ -1,3 +1,5 @@
+import time
+import os
 from cooking_config import Config
 import pygame as pg
 import random
@@ -46,19 +48,22 @@ class Menu:
         self.__serving_pad = None
         self.__score = 0
 
+        self.__completed_dishes = []
+        self.__session_start = time.time()
+        self.__current_minute = 0
+        self.__dishes_this_minute = 0
+        self.__last_save_time = time.time()
+
         self.__images = {
             item: pg.transform.scale(Config.get_image(item), (90, 90)) for item in self.MENU_ITEMS
         }
 
-        self.__complete_orders = []
-        self.__session_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     def serve_dish(self, plate):
         """Check if plate matches any order and calculate score"""
         if not self.orders:
-            return 0  # No orders to fulfill
+            return 0
 
-        # Get the prepared dish type from plate
+            # Find matching dish type
         prepared_type = None
         for ingredient in plate.get_ingredients():
             if ingredient.get_type() in self.MENU_ITEMS:
@@ -68,26 +73,50 @@ class Menu:
         if not prepared_type:
             return 0
 
-        # Find matching order (FIFO)
+        # Process matching order
         for order in self.orders:
             if order["name"] == prepared_type:
-                # Calculate time bonus (faster serving = more points)
+                # Calculate points
                 time_remaining = order["duration"] - (pg.time.get_ticks() - order["start_time"])
-                time_bonus = max(0, time_remaining // 1000)  # 1 point per second remaining
+                time_bonus = max(0, time_remaining // 1000)
 
                 # Remove fulfilled order
                 self.orders.remove(order)
 
-                # Base points + time bonus
                 points = 10 + time_bonus
                 self.__score += points
+
+                # Update minute tracking
+                self._update_minute_tracking()
                 return points
 
-        return 0  # No matching order found
+        return 0
+
+    def _update_minute_tracking(self):
+        """Internal method to handle minute-by-minute tracking"""
+        current_time = time.time()
+        elapsed_minutes = int((current_time - self.__session_start) / 60)
+
+        # If new minute, save previous minute's data
+        if elapsed_minutes > self.__current_minute:
+            self.__completed_dishes.append({
+                'minute': self.__current_minute,
+                'dishes': self.__dishes_this_minute,
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+            self.__current_minute = elapsed_minutes
+            self.__dishes_this_minute = 0
+
+            # Auto-save every 1 minutes
+            if elapsed_minutes % 1 == 0:
+                self.save_to_order_per_minute()
+
+        self.__dishes_this_minute += 1
 
     def reset(self):
         self.orders = deque()
         self.__score = 0
+        self.save_to_order_per_minute()
 
     def add_order(self):
         """Add a new random menu item to the queue."""
@@ -157,3 +186,34 @@ class Menu:
             pg.draw.rect(screen, Config.get_config('GREEN'),
                          (bar_x, bar_y, int(bar_width * progress), bar_height),
                          border_radius=4)
+
+    def save_to_order_per_minute(self, force_save=False):
+        """Save statistics to CSV, with option to force immediate save"""
+        if not self.__completed_dishes and not force_save:
+            return
+
+        filename = "order_per_minute.csv"
+        try:
+            file_exists = os.path.exists(filename)
+
+            with open(filename, 'a', newline='') as csvfile:
+                fieldnames = ['timestamp', 'minute', 'dishes', 'score']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                if not file_exists:
+                    writer.writeheader()
+
+                for record in self.__completed_dishes:
+                    writer.writerow({
+                        'timestamp': record['timestamp'],
+                        'minute': record['minute'],
+                        'dishes': record['dishes'],
+                    })
+
+            # Clear saved records
+            self.__completed_dishes = []
+            self.__last_save_time = time.time()
+
+        except Exception as e:
+            print(f"Error saving dish stats: {e}")
+

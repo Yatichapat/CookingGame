@@ -49,6 +49,8 @@ class GameApp:
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
         self.__final_score = 0
 
+        self.__last_save_time = time.time()
+
     def handle_events(self):
         """Handle user input"""
         for event in pg.event.get():
@@ -183,6 +185,10 @@ class GameApp:
         self.__menu.update()
         self.__kitchen_map.update()
         self.__serving.update()
+
+        if time.time() - self.__last_save_time > 300:  # 300 seconds = 5 minutes
+            self.__menu.save_to_order_per_minute()
+            self.__last_save_time = time.time()
 
     def render(self):
         """Render game objects"""
