@@ -57,6 +57,10 @@ class Fridge:
                 self.__select_index = (self.__select_index - 1) % len(self.__ingredients)
             elif direction == "RIGHT":
                 self.__select_index = (self.__select_index + 1) % len(self.__ingredients)
+            elif direction == 'UP':
+                self.__select_index = (self.__select_index - 4) % len(self.__ingredients)
+            elif direction == 'DOWN':
+                self.__select_index = (self.__select_index + 4) % len(self.__ingredients)
 
     def add_dropped_ingredient(self, ingredient):
         self.__dropped_ingredients.append(ingredient)

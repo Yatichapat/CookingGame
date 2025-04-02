@@ -1,3 +1,5 @@
+import time
+
 import pygame as pg
 from cooking_config import Config
 from cooking_chef import Chef
@@ -49,7 +51,8 @@ class GameApp:
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
         self.__final_score = 0
 
-        self.__last_save_time = time.time()
+        self.__orders_complete_this_session = 0
+        self.__all_sessions_order = []
 
     def handle_events(self):
         """Handle user input"""
@@ -66,6 +69,10 @@ class GameApp:
                         self.__fridge.move_selection("LEFT")
                     elif event.key == pg.K_d:
                         self.__fridge.move_selection("RIGHT")
+                    elif event.key == pg.K_w:
+                        self.__fridge.move_selection("UP")
+                    elif event.key == pg.K_s:
+                        self.__fridge.move_selection("DOWN")
                     elif event.key == pg.K_RETURN:
                         if self.__held_ingredient is None:
                             self.__held_ingredient = self.__fridge.pick_ingredient()
@@ -76,54 +83,70 @@ class GameApp:
                 elif event.key == pg.K_RETURN:
                     tool = self.is_near_tool()
 
+                    # First try to pick up dropped items if not holding anything
+                    if self.__held_ingredient is None and self.__held_plate is None:
+                        # Try to pick up dropped plate first (since it might contain ingredients)
+                        for plate in self.__dropped_plate[:]:
+                            if self.is_near_dropped_item(plate.get_position()):
+                                self.__held_plate = plate
+                                self.__dropped_plate.remove(plate)
+                                break
+
+                        # If no plate was picked up, try to pick up ingredient
+                        if self.__held_plate is None:
+                            for ingredient in self.__dropped_ingredient[:]:
+                                if self.is_near_dropped_item(ingredient.get_position()):
+                                    self.__held_ingredient = ingredient
+                                    self.__dropped_ingredient.remove(ingredient)
+                                    break
+
                     # Handle held ingredient
                     if self.__held_ingredient:
                         if tool == 'pan':
                             self.__pan.put_ingredient_in_pan(self.__held_ingredient)
                             self.__held_ingredient = None
-
                         elif tool == 'cut':
                             self.__cutting_board.put_ingredient_in_cutting_board(self.__held_ingredient)
                             self.__cutting_board.cook_ingredients()
                             self.__held_ingredient = None
-
                         elif tool == 'plate':
                             self.__plate.add_ingredient(self.__held_ingredient)
                             self.__held_ingredient = None
-
                         elif tool == 'trash':
                             self.__held_ingredient = None
-
                         elif tool == 'pad':
                             if self.__held_plate:
                                 if self.__serving.add_plate(self.__held_plate):
                                     self.__held_plate = None
                                 else:
                                     self.__serving.serve()
-
                         else:
                             self.drop_food_to_the_world()
+
+                    # Handle held plate
+                    elif self.__held_plate:
+                        if tool == 'pad':
+                            if self.__serving.add_plate(self.__held_plate):
+                                self.__held_plate = None
+                            else:
+                                self.__serving.serve()
+                        elif tool == 'trash':
+                            self.__held_plate = None
+                        else:
                             self.drop_all_to_the_world()
 
-                    # Handle held plate or empty hands
+                    # Handle empty hands (interact with tools)
                     else:
                         if tool == 'pan' and self.__pan.is_ready_to_pick():
                             self.__held_ingredient = self.__pan.get_cooked_ingredients()
-
                         elif tool == 'cut' and self.__cutting_board.is_ready_to_pick():
                             self.__held_ingredient = self.__cutting_board.get_cooked_ingredients()
-
                         elif tool == 'plate':
                             if not self.__plate_pick:
                                 self.__plate_pick = True
                                 self.__held_plate = self.__plate.pick_up_plate()
                             else:
                                 self.__plate_pick = False
-
-                        elif tool == 'pad':
-                            if self.__held_plate:  # If holding a plate, try to place it
-                                if self.__serving.add_plate(self.__held_plate):
-                                    self.__held_plate = None
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)
@@ -161,6 +184,10 @@ class GameApp:
             self.__dropped_plate.append(dropped_plate)
             self.__held_plate = None
 
+    def is_near_dropped_item(self, item_position):
+        chef_x, chef_y = self.__chef.get_position()
+        return ((chef_x - item_position[0]) ** 2 + (chef_y - item_position[1]) ** 2) ** 0.5 < 50
+
     def is_near_tool(self):
         tools = {
             'pan': self.__pan,
@@ -174,7 +201,7 @@ class GameApp:
         nearest_tool = min(tools, key=lambda t: ((chef_x - tools[t].get_position()[0]) ** 2 +
                                                  (chef_y - tools[t].get_position()[1]) ** 2) ** 0.5)
         return nearest_tool if ((chef_x - tools[nearest_tool].get_position()[0]) ** 2 +
-                                (chef_y - tools[nearest_tool].get_position()[1]) ** 2) ** 0.5 < 100 else None
+                                (chef_y - tools[nearest_tool].get_position()[1]) ** 2) ** 0.5 <= 100 else None
 
     def update(self):
         """Update game logic"""
@@ -186,10 +213,6 @@ class GameApp:
         self.__kitchen_map.update()
         self.__serving.update()
 
-        if time.time() - self.__last_save_time > 300:  # 300 seconds = 5 minutes
-            self.__menu.save_to_order_per_minute()
-            self.__last_save_time = time.time()
-
     def render(self):
         """Render game objects"""
 
@@ -200,6 +223,7 @@ class GameApp:
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
+                    self.__menu.save_to_order_per_session(force_save=True)
                     pg.quit()
                     exit()
 
@@ -207,16 +231,20 @@ class GameApp:
                     mouse_pos = pg.mouse.get_pos()
 
                     if restart_button.collidepoint(mouse_pos):
+                        # Only save when game is exiting
+                        self.__menu.save_to_order_per_session(force_save=True)
                         self.restart_game()
                         return
 
                     elif exit_button.collidepoint(mouse_pos):
+                        # Only save when game is exiting
+                        self.__menu.save_to_order_per_session(force_save=True)
                         pg.quit()
                         exit()
             return
 
         elif not self.__start_game:
-            restart, stat, exit_to_main = GameUI.draw_start_game(self.__screen)
+            start, stat, exit_ = GameUI.draw_start_game(self.__screen)
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -225,7 +253,7 @@ class GameApp:
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     mouse_pos = pg.mouse.get_pos()
 
-                    if restart.collidepoint(mouse_pos):
+                    if start.collidepoint(mouse_pos):
                         self.__start_game = True
                         self.restart_game()
                         return
@@ -234,7 +262,9 @@ class GameApp:
                         # self.show_statistics()  # Function to display statistics
                         pass
 
-                    elif exit_to_main.collidepoint(mouse_pos):
+                    elif exit_.collidepoint(mouse_pos):
+                        # Only save when game is exiting
+                        self.__menu.save_to_order_per_session(force_save=True)
                         self.__start_game = False
                         GameUI.game_over = False
             return
@@ -264,8 +294,6 @@ class GameApp:
                 self.__held_plate.set_position((x + 10, y))
                 self.__held_plate.draw(self.__screen)
 
-
-
             self.__menu.draw(self.__screen)
             self.__menu.draw_score(self.__screen)
             self.__game_ui.draw_timer(self.__screen)
@@ -282,6 +310,7 @@ class GameApp:
                 self.handle_events()
                 self.update()
             self.__clock.tick(Config.get_config('FPS'))
+
         pg.quit()
 
 
