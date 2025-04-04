@@ -84,7 +84,7 @@ class KitchenMap:
         self.draw_wall()
         self.draw_counter_top()
         self.draw_stove()
-        self.draw_red_button()
+        # self.draw_red_button()
         self.draw_menu_block()
 
 

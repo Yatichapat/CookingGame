@@ -1,4 +1,7 @@
+from datetime import datetime
 import time
+import csv
+import os
 import pygame as pg
 from cooking_config import Config
 from cooking_ui import GameUI
@@ -20,14 +23,33 @@ class Chef:
         self.__held_plate = None
 
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
-        self.__key_states = {pg.K_w: False, pg.K_s: False, pg.K_a: False, pg.K_d: False}
+        self.__key_states = {
+            pg.K_w: False,
+            pg.K_s: False,
+            pg.K_a: False,
+            pg.K_d: False
+        }
+
+        self.__key_initial_press = {
+            pg.K_w: False,
+            pg.K_s: False,
+            pg.K_a: False,
+            pg.K_d: False
+        }
 
         self.__chef_sprite_original = pg.transform.scale(pg.image.load("images/player.png"), (40, 80))
         self.__chef_sprite = self.__chef_sprite_original
         self.__chef_rect = self.__chef_sprite.get_rect(center=self.__position)
+
         self.__facing_left = False
 
-        self.__keystrokes = 0
+        self.__keystrokes = {
+            pg.K_w: 0,  # UP
+            pg.K_s: 0,  # DOWN
+            pg.K_a: 0,  # LEFT
+            pg.K_d: 0  # RIGHT
+        }
+        self.__last_log_time = time.time()
         self.__dish_start_time = None
 
     def reset(self):
@@ -38,7 +60,12 @@ class Chef:
         self.__facing_left = False
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
 
-        self.__keystrokes = 0
+        self.__keystrokes = {key: 0 for key in self.__key_states}
+        for key in self.__key_states:
+            self.__key_states[key] = False
+            self.__key_initial_press[key] = False
+            self.__keystrokes[key] = 0
+
         self.__dish_start_time = None
 
     def draw(self):
@@ -48,22 +75,17 @@ class Chef:
 
     def move(self):
         """Update chef's position and sprite orientation"""
-        prev_x, prev_y = self.__chef_rect.topleft  # Store previous position
-
         if self.movement['UP']:
             self.__chef_rect.y -= self.__speed
+
         if self.movement['DOWN']:
             self.__chef_rect.y += self.__speed
+
         if self.movement['LEFT']:
             self.__chef_rect.x -= self.__speed
-            if not self.__facing_left:
-                self.__facing_left = True
-                self.update_sprite(flip=True)
+
         if self.movement['RIGHT']:
             self.__chef_rect.x += self.__speed
-            if self.__facing_left:
-                self.__facing_left = False
-                self.update_sprite(flip=False)
 
         # Keep the chef inside the screen boundaries
         self.__chef_rect.x = max(220, min(self.__chef_rect.x, Config.get_config('WIN_SIZE_W') - 100))
@@ -81,14 +103,19 @@ class Chef:
     def handle_input(self, event, fridge_open):
         """Handle keyboard input for movement"""
         if event.type == pg.KEYDOWN:
-            if event.key in self.__key_states:
+            if event.key in self.__key_states and not self.__key_initial_press[event.key]:
                 self.__key_states[event.key] = True
+                self.__keystrokes[event.key] += 1
+                self.__key_initial_press[event.key] = True
+
                 if not fridge_open:
                     self._update_movement_from_states()
 
         elif event.type == pg.KEYUP:
             if event.key in self.__key_states:
                 self.__key_states[event.key] = False
+                self.__key_initial_press[event.key] = False
+
                 if not fridge_open:
                     self._update_movement_from_states()
 
@@ -141,4 +168,46 @@ class Chef:
         """Pick up a plate and its ingredients."""
         if not self.__held_plate:
             self.__held_plate = plate
-            
+
+    def save_keystrokes_to_csv(self):
+        """Save keystrokes to a CSV file with timestamp and movement data.
+
+        Creates a new file if it doesn't exist, or appends to existing file.
+        Logs only when the specified time interval has passed.
+        """
+        filename = "keystroke_per_dish.csv"
+        try:
+            current = datetime.now()
+            file_exists = os.path.exists(filename)
+
+            with open(filename, 'a', newline='') as csvfile:
+                fieldnames = [
+                    'timestamp',
+                    'up',
+                    'down',
+                    'left',
+                    'right',
+                    'total_key'
+                ]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                if not file_exists:
+                    writer.writeheader()
+
+                record = {
+                    'timestamp': current.strftime("%Y-%m-%d %H:%M:%S"),
+                    'up': self.__keystrokes[pg.K_w],
+                    'down': self.__keystrokes[pg.K_s],
+                    'left': self.__keystrokes[pg.K_a],
+                    'right': self.__keystrokes[pg.K_d],
+                    'total_key': sum(self.__keystrokes.values())
+                }
+
+                self.__last_log_time = current
+                print("Saving session data:", record)  # Debug print
+                writer.writerow(record)
+
+        except IOError as e:
+            print(f"Error writing to CSV file: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")

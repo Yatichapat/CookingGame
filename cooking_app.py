@@ -8,6 +8,7 @@ from cooking_ingredients import *
 from cooking_served import Serving
 from cooking_ui import *
 from cooking_tool import *
+from cooking_groceries import Groceries
 
 
 class GameApp:
@@ -33,7 +34,9 @@ class GameApp:
 
         self.__held_ingredient = None
         self.__held_plate = None
+        self.__held_bag = None
         self.__plate_pick = False
+
         self.__dropped_ingredient = []
         self.__dropped_plate = []
 
@@ -45,8 +48,10 @@ class GameApp:
 
         self.__running = True
         self.__start_game = False
+
         self.__menu = Menu()
         self.__serving = Serving(945, 150, self.__screen, self.__menu)
+        self.__groceries = Groceries(self.__screen)
 
         self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
         self.__final_score = 0
@@ -58,12 +63,27 @@ class GameApp:
         """Handle user input"""
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                self.__chef.save_keystrokes_to_csv()
                 self.__running = False
+
+
 
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_e:
-                    self.__fridge.toggle_fridge(self.__chef)
+                    if self.__held_bag:
+                        # If near fridge, release contents
+                        if self.is_near_tool() == 'fridge':
+                            new_ingredients = self.__groceries.release_at_fridge(
+                                self.__fridge.get_position()
+                            )
+                            self.__dropped_ingredient.extend(new_ingredients)
+                            self.__held_bag = False
 
+                    else:
+                        self.__fridge.toggle_fridge(self.__chef)
+
+
+                # Check if the fridge is open and handle ingredient selection
                 elif self.__fridge.is_open:
                     if event.key == pg.K_a:
                         self.__fridge.move_selection("LEFT")
@@ -120,8 +140,16 @@ class GameApp:
                                     self.__held_plate = None
                                 else:
                                     self.__serving.serve()
-                        else:
-                            self.drop_food_to_the_world()
+
+                            # If carrying something, drop it first
+                            if self.__held_ingredient:
+                                self.drop_food_to_the_world()
+                                self.__held_ingredient = None
+
+                    # Only spawn bag if not already carrying one and no bag exists
+                    elif not self.__held_bag and not self.__groceries.has_active_bag():
+                        self.__groceries.spawn_bag()
+                        self.__held_ingredient = None  # Clear held ingredient after spawning bag
 
                     # Handle held plate
                     elif self.__held_plate:
@@ -134,19 +162,37 @@ class GameApp:
                             self.__held_plate = None
                         else:
                             self.drop_all_to_the_world()
+                    # Handle held bag
+                    elif self.__held_bag:
+                        # Drop bag at current position
+                        self.__groceries.drop_bag(*self.__chef.get_position())
+                        self.__held_bag = False
 
                     # Handle empty hands (interact with tools)
                     else:
                         if tool == 'pan' and self.__pan.is_ready_to_pick():
                             self.__held_ingredient = self.__pan.get_cooked_ingredients()
+
                         elif tool == 'cut' and self.__cutting_board.is_ready_to_pick():
                             self.__held_ingredient = self.__cutting_board.get_cooked_ingredients()
+
                         elif tool == 'plate':
                             if not self.__plate_pick:
                                 self.__plate_pick = True
                                 self.__held_plate = self.__plate.pick_up_plate()
                             else:
                                 self.__plate_pick = False
+
+                        if tool == 'paper bag':
+                            if self.__held_bag:
+                                # Drop the bag
+                                self.__groceries.drop_bag(*self.__chef.get_position())
+                                self.__held_bag = False
+
+                            else:
+                                # Try to pick up bag
+                                if self.__groceries.pick_up_bag(self.__chef.get_position()):
+                                    self.__held_bag = True
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)
@@ -191,17 +237,40 @@ class GameApp:
     def is_near_tool(self):
         tools = {
             'pan': self.__pan,
-            # 'pot': self.__pot,
             'cut': self.__cutting_board,
             'plate': self.__plate,
             'trash': self.__trash,
-            'pad': self.__serving
+            'pad': self.__serving,
+            'fridge' : self.__fridge
         }
+
+        # Special handling for paper bag if it exists
+        if self.__groceries.has_active_bag() and not self.__groceries.is_bag_carried():
+            tools['paper bag'] = self.__groceries.get_bag_position()
+
         chef_x, chef_y = self.__chef.get_position()
-        nearest_tool = min(tools, key=lambda t: ((chef_x - tools[t].get_position()[0]) ** 2 +
-                                                 (chef_y - tools[t].get_position()[1]) ** 2) ** 0.5)
-        return nearest_tool if ((chef_x - tools[nearest_tool].get_position()[0]) ** 2 +
-                                (chef_y - tools[nearest_tool].get_position()[1]) ** 2) ** 0.5 <= 100 else None
+
+        # Find nearest tool
+        nearest_tool = None
+        min_distance = float('inf')
+
+        for tool_name, tool in tools.items():
+            if tool is None:
+                continue
+
+            # Handle both tool objects and position tuples
+            if hasattr(tool, 'get_position'):
+                tool_x, tool_y = tool.get_position()
+            else:  # For paper bag position tuple
+                tool_x, tool_y = tool
+
+            distance = ((chef_x - tool_x) ** 2 + (chef_y - tool_y) ** 2) ** 0.5
+
+            if distance < min_distance:
+                min_distance = distance
+                nearest_tool = tool_name
+
+        return nearest_tool if min_distance <= 100 else None
 
     def update(self):
         """Update game logic"""
@@ -233,12 +302,14 @@ class GameApp:
                     if restart_button.collidepoint(mouse_pos):
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
+                        self.__chef.save_keystrokes_to_csv()
                         self.restart_game()
                         return
 
                     elif exit_button.collidepoint(mouse_pos):
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
+                        self.__chef.save_keystrokes_to_csv()
                         pg.quit()
                         exit()
             return
@@ -265,6 +336,7 @@ class GameApp:
                     elif exit_.collidepoint(mouse_pos):
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
+                        self.__chef.save_keystrokes_to_csv()
                         self.__start_game = False
                         GameUI.game_over = False
             return
@@ -281,6 +353,9 @@ class GameApp:
             self.__chef.draw()
             self.__zombie1.draw()
 
+            self.__groceries.draw_red_button()
+            self.__groceries.draw_bag()
+
             if self.__held_ingredient:
                 x, y = self.__chef.get_position()
                 self.__screen.blit(self.__held_ingredient.images, (x, y + 25))
@@ -293,6 +368,10 @@ class GameApp:
                 x, y = self.__chef.get_position()
                 self.__held_plate.set_position((x + 10, y))
                 self.__held_plate.draw(self.__screen)
+
+            if self.__held_bag:
+                x, y = self.__chef.get_position()
+                self.__screen.blit(self.__groceries.get_bag_image(), (x + 10, y))
 
             self.__menu.draw(self.__screen)
             self.__menu.draw_score(self.__screen)

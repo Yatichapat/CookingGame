@@ -107,6 +107,10 @@ class Fridge:
             ingredient.draw_at(screen, ingredient.get_position()[0] * Config.get_config('GRID_SIZE_W'),
                                ingredient.get_position()[1] * Config.get_config('GRID_SIZE_H'))
 
+    def get_position(self):
+        """Returns the position of the fridge."""
+        return self.__position
+
 
 class Equipments:
     def __init__(self, x, y, image_path):

@@ -23,6 +23,9 @@ class Config:
         'BACKGROUND': (249, 234, 211),
         'CHARACTER_SIZE': 100,
         'MESSAGE_BACKGROUND': pg.transform.scale(pg.image.load("images/message.png"),(200, 200)),
+
+        "paper bag": "images/paperbag.png",
+        "red button": "images/red_button.png",
     }
 
     __IMAGE_CACHE = {}
@@ -60,7 +63,7 @@ class Config:
             "cheese sliced": "images/simply cooked/Cooked food/cheese_slice.png",
 
             "lettuce": "images/FarmVeggies/lettuce.png",
-            "lettuce sliced": "images/FarmVeggies/lettuceslice.png"
+            "lettuce sliced": "images/FarmVeggies/lettuceslice.png",
 
         }
 
