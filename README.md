@@ -1,1 +1,3 @@
-# CookingGame
+# Apocalypse Cooker
+
+## Description

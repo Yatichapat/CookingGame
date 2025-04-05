@@ -188,36 +188,30 @@ class GameUI:
             screen_width = Config.get_config('WIN_SIZE_W')
             screen_height = Config.get_config('WIN_SIZE_H')
 
-            # Game title text
-            title_text = font.render("Apocalypse Cooker", True, Config.get_config('BLACK'))
-            title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
-
             # Button dimensions
             button_width = 250
             button_height = 60
             button_x = (screen_width - button_width) // 2  # Centered horizontally
 
             # Define button positions
-            restart_button_rect = pg.Rect(button_x, screen_height // 2 - 60, button_width, button_height)
-            stat_button_rect = pg.Rect(button_x, screen_height // 2 + 20, button_width, button_height)
-            exit_button_rect = pg.Rect(button_x, screen_height // 2 + 100, button_width, button_height)
+            restart_button_rect = pg.Rect(button_x, screen_height // 2 - 10, button_width, button_height)
+            stat_button_rect = pg.Rect(button_x, screen_height // 2 + 80, button_width, button_height)
+            exit_button_rect = pg.Rect(button_x, screen_height // 2 + 170, button_width, button_height)
 
             # Fill background
-            screen.fill(Config.get_config('WHITE'))
+            background_image = pg.image.load("images/Background.png")
+            screen.blit(background_image, (0, 0))
 
-            # Draw title
-            screen.blit(title_text, title_rect)
+            # Game title text
+            title_text = pg.image.load('images/title.png')
+            screen.blit(title_text, (200, 0))
 
             # Draw buttons
-            for rect in [restart_button_rect, stat_button_rect, exit_button_rect]:
-                pg.draw.rect(screen, Config.get_config('GRAY'), rect, border_radius=10)
+            start_text = pg.image.load('images/start.png')
+            stat_text = pg.image.load('images/stat.png')
+            exit_text = pg.image.load('images/exit.png')
 
-            # Render and center button text
-            restart_text = button_font.render("Start", True, Config.get_config('BLACK'))
-            stat_text = button_font.render("Statistics", True, Config.get_config('BLACK'))
-            exit_text = button_font.render("Exit", True, Config.get_config('BLACK'))
-
-            screen.blit(restart_text, restart_text.get_rect(center=restart_button_rect.center))
+            screen.blit(start_text, start_text.get_rect(center=restart_button_rect.center))
             screen.blit(stat_text, stat_text.get_rect(center=stat_button_rect.center))
             screen.blit(exit_text, exit_text.get_rect(center=exit_button_rect.center))
 

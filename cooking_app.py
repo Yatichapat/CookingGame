@@ -66,8 +66,6 @@ class GameApp:
                 self.__chef.save_keystrokes_to_csv()
                 self.__running = False
 
-
-
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_e:
                     if self.__held_bag:
@@ -147,7 +145,7 @@ class GameApp:
                                 self.__held_ingredient = None
 
                     # Only spawn bag if not already carrying one and no bag exists
-                    elif not self.__held_bag and not self.__groceries.has_active_bag():
+                    elif not self.__held_bag and not self.__groceries.has_active_bag() and tool == 'red button':
                         self.__groceries.spawn_bag()
                         self.__held_ingredient = None  # Clear held ingredient after spawning bag
 
@@ -241,7 +239,8 @@ class GameApp:
             'plate': self.__plate,
             'trash': self.__trash,
             'pad': self.__serving,
-            'fridge' : self.__fridge
+            'fridge': self.__fridge,
+            'red button': self.__groceries.get_red_button_position(),
         }
 
         # Special handling for paper bag if it exists
@@ -339,6 +338,8 @@ class GameApp:
                         self.__chef.save_keystrokes_to_csv()
                         self.__start_game = False
                         GameUI.game_over = False
+                        self.__running = False
+                        pg.quit()
             return
 
         elif self.__start_game:

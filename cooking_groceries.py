@@ -105,6 +105,10 @@ class Groceries:
             return (self.__active_bag['rect'].x, self.__active_bag['rect'].y)
         return None
 
+    def get_red_button_position(self):
+        """Get the position of the red button"""
+        return self.button_rect.topleft
+
     def has_active_bag(self):
         return self.__active_bag is not None
 
