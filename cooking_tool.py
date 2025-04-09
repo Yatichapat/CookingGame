@@ -76,9 +76,15 @@ class Fridge:
 
     def put_ingredient_in_fridge(self, ingredient):
         """Puts the ingredient back into the fridge."""
-        if self.is_open:
-            self.__ingredients.append(ingredient)  # Add the ingredient back to the fridge
-            ingredient.set_position(self.__position)
+        items_per_row = 4
+        row = len(self.__ingredients) // items_per_row
+        col = len(self.__ingredients) % items_per_row
+        ingredient_x = 10 + (col * Config.get_config('GRID_SIZE_W') * 2.5)
+        ingredient_y = 10 + (row * Config.get_config('GRID_SIZE_H') * 1.5)
+
+        ingredient.set_position((ingredient_x, ingredient_y))
+        self.__ingredients.append(ingredient)
+
 
     def draw(self, screen):
         """Draws the fridge and its ingredients if open."""
@@ -332,6 +338,7 @@ class Plate:
 class TrashBin:
     def __init__(self, x, y):
         self.__position = (x, y)
+        self.__mistakes = 0
         self.__image = pg.image.load("images/trashbin.png")
         self.__image = pg.transform.scale(self.__image, (100, 100))
 
@@ -340,3 +347,9 @@ class TrashBin:
 
     def get_position(self):
         return self.__position
+
+    def get_mistakes(self):
+        return self.__mistakes
+
+    def increment_mistakes(self):
+        self.__mistakes += 1

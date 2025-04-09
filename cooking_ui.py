@@ -84,7 +84,6 @@ class KitchenMap:
         self.draw_wall()
         self.draw_counter_top()
         self.draw_stove()
-        # self.draw_red_button()
         self.draw_menu_block()
 
 
@@ -93,7 +92,7 @@ class GameUI:
 
     def __init__(self):
         self.__start_time = pg.time.get_ticks()
-        self.__game_time = 180
+        self.__game_time = 240  # Game time in seconds
 
     def reset(self):
         self.__start_time = pg.time.get_ticks()

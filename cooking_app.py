@@ -69,17 +69,13 @@ class GameApp:
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_e:
                     if self.__held_bag:
-                        # If near fridge, release contents
-                        if self.is_near_tool() == 'fridge':
-                            new_ingredients = self.__groceries.release_at_fridge(
-                                self.__fridge.get_position()
-                            )
-                            self.__dropped_ingredient.extend(new_ingredients)
-                            self.__held_bag = False
+
+                        self.__groceries.release_at_fridge(
+                            self.__fridge.get_position(), self.__fridge)
+                        self.__held_bag = False
 
                     else:
                         self.__fridge.toggle_fridge(self.__chef)
-
 
                 # Check if the fridge is open and handle ingredient selection
                 elif self.__fridge.is_open:

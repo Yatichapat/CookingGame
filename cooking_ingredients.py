@@ -1,5 +1,6 @@
 import os
 from cooking_config import Config
+from cooking_ui import GameUI
 import pygame as pg
 import random
 from collections import deque
@@ -37,7 +38,7 @@ class Ingredients:
 
 
 class Menu:
-    __MENU_ITEMS = ["sandwich", "egg fried", "chicken fried", "lamb fried"]
+    __MENU_ITEMS = ["sandwich", "egg fried", "chicken fried", "lamb fried", "chicken drumstick fried"]
 
     def __init__(self, max_orders=3):
         self.__font_menu = pg.font.Font(None, 14)
@@ -148,9 +149,10 @@ class Menu:
         current_time = pg.time.get_ticks()
         while self.orders and current_time - self.orders[0]["start_time"] >= self.orders[0]["duration"]:
             self.orders.popleft()  # Remove expired order
-            self.__score -= 5  # Penalty for expired order
+            if not GameUI.game_over:
+                self.__score -= 5  # Penalty for expired order
 
-        if len(self.orders) < self.max_orders and random.random() < 0.01:
+        if len(self.orders) < self.max_orders and random.random() < 0.05:
             self.add_order()
 
     def draw_score(self, screen):

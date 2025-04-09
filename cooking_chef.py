@@ -180,6 +180,19 @@ class Chef:
             current = datetime.now()
             file_exists = os.path.exists(filename)
 
+            # Initialize last_id
+            last_id = 0
+
+            # Read existing records if file exists
+            if file_exists:
+                with open(filename, 'r') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    records = list(reader)
+                    if records:
+                        # Convert string IDs to integers for comparison
+                        last_id = max(int(record['id']) for record in records)
+
+            # Open file in append mode
             with open(filename, 'a', newline='') as csvfile:
                 fieldnames = [
                     'timestamp',
@@ -187,7 +200,8 @@ class Chef:
                     'down',
                     'left',
                     'right',
-                    'total_key'
+                    'total_key',
+                    'id',
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -195,6 +209,7 @@ class Chef:
                     writer.writeheader()
 
                 record = {
+                    'id': last_id + 1,
                     'timestamp': current.strftime("%Y-%m-%d %H:%M:%S"),
                     'up': self.__keystrokes[pg.K_w],
                     'down': self.__keystrokes[pg.K_s],

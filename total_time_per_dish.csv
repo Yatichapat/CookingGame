@@ -1,1 +1,1 @@
-session_start, session_end, total_score, total_time_played, total_time_per_dish
+session_start, session_end, cooked_start, cooked_end, total_score, total_time_played, total_time_per_dish

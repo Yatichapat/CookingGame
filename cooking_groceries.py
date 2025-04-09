@@ -81,21 +81,18 @@ class Groceries:
             return True
         return False
 
-    def release_at_fridge(self, fridge_pos):
+    def release_at_fridge(self, fridge_pos, fridge):
         """Release ingredients when bag reaches fridge"""
         if not self.__bag_carried or not self.__active_bag:
             return []
 
-        released = []
         for item in self.__active_bag['contents']:
             # Add some randomness to spawn positions
-            x = fridge_pos[0] + random.randint(-20, 20)
-            y = fridge_pos[1] + random.randint(-20, 20)
-            released.append(Ingredients(x, y, item))
+            fridge.put_ingredient_in_fridge(Ingredients(0, 0, item))
 
         self.__bag_carried = False
         self.__active_bag = None
-        return released
+        return []
 
     def get_bag_position(self):
         """Get current bag position (world or carried)"""
