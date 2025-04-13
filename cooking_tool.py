@@ -1,6 +1,9 @@
 from cooking_config import Config
 from cooking_ingredients import *
 import pygame as pg
+import os
+import csv
+from datetime import datetime
 
 
 class Fridge:
@@ -20,11 +23,46 @@ class Fridge:
         self.is_open = False
         self.__dropped_ingredients = []
         self.__select_index = 0
+        self.__usage_data = []  # Stores ingredient usage records
+        self.__csv_file = "ingredient_used.csv"
+        self.__initialize_csv()
+        self.__session_id = self.__get_next_session_id()
+
+    def __initialize_csv(self):
+        """Create CSV file with headers if it doesn't exist"""
+        if not os.path.exists(self.__csv_file):
+            with open(self.__csv_file, 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["session_id", "id",
+                                "timestamp", "ingredient", "action", "quantity"])
+
+    def __record_usage(self, ingredient, action, quantity=1):
+        """Record ingredient usage to memory and CSV"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+        record = {
+            "session_id": self.__session_id,
+            "id": len(self.__usage_data) + 1,
+            "timestamp": timestamp,
+            "ingredient": ingredient,
+            "action": action,  # "Taken" or "Returned"
+            "quantity": quantity
+        }
+
+        self.__usage_data.append(record)
+
+        # Append to CSV file
+        with open(self.__csv_file, 'a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=record.keys())
+            writer.writerow(record)
 
     def reset(self):
+        """Reset fridge to initial state and create new session"""
         self.is_open = False
         self.__select_index = 0
         self.__ingredients.clear()
+        self.__session_id = self.__get_next_session_id()
 
         self.__ingredients = [
             Ingredients(2, 10, "lamb"),
@@ -71,6 +109,7 @@ class Fridge:
             ingredient = self.__ingredients.pop(self.__select_index)
             if self.__select_index >= len(self.__ingredients):
                 self.__select_index = len(self.__ingredients)
+            self.__record_usage(ingredient.get_type(), "Taken")
             return ingredient
         return None
 
@@ -84,6 +123,8 @@ class Fridge:
 
         ingredient.set_position((ingredient_x, ingredient_y))
         self.__ingredients.append(ingredient)
+
+        self.__record_usage(ingredient.get_type(), "Returned")
 
 
     def draw(self, screen):
@@ -116,6 +157,21 @@ class Fridge:
     def get_position(self):
         """Returns the position of the fridge."""
         return self.__position
+
+    def __get_next_session_id(self):
+        if not os.path.exists(self.__csv_file):
+            return 1
+
+        session_ids = []
+        with open(self.__csv_file, 'r') as file:
+            reader = csv.DictReader(file)  # <-- This ensures rows are dictionaries
+            for row in reader:
+                sid = row.get('session_id', '').strip()
+                if sid.isdigit():
+                    session_ids.append(int(sid))
+
+        return max(session_ids, default=0) + 1
+
 
 
 class Equipments:

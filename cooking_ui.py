@@ -1,4 +1,3 @@
-import pygame as pg
 from cooking_config import *
 
 
@@ -8,6 +7,7 @@ class KitchenMap:
         self.__tile_size = 60
         self.__screen = screen
 
+        # Colors
         self.__grid_color = Config.get_config('GRAY')
         self.__background_color = Config.get_config('BACKGROUND')
         self.__sidebar_color = Config.get_config('PASTEL_GRAY')
@@ -49,6 +49,10 @@ class KitchenMap:
         wall_color = Config.get_config('GRAY_BLUE')
         pg.draw.rect(self.__screen, wall_color, (0, 0, wall_width, wall_height))
 
+        blooddrip = pg.image.load('images/Decoration/blooddrip.png')
+        blooddrip = pg.transform.scale(blooddrip, (100, 100))
+        self.__screen.blit(blooddrip, (500, 10))
+
     def draw_counter_top(self):
         counter_top_image = pg.image.load("images/countertop.png")
         counter_top_image = pg.transform.scale(counter_top_image, (Config.get_config('WIN_SIZE_W') - 300, 80))
@@ -62,13 +66,6 @@ class KitchenMap:
 
         counter_position2 = (935, 150)
         self.__screen.blit(counter_top_image2, counter_position2)
-
-    def draw_red_button(self):
-        red_button_image = pg.image.load('images/red_button.png')
-        red_button_image = pg.transform.scale(red_button_image, (100, 100))
-
-        red_button_position = (915, 300)
-        self.__screen.blit(red_button_image, red_button_position)
 
     def draw_stove(self):
         stove_image = pg.image.load('images/stove.png')

@@ -1,0 +1,27 @@
+session_id, id, timestamp, ingredient, action, quantity
+1,1,2025-04-13 22:06:50,lamb,Taken,1
+1,2,2025-04-13 22:06:50,lamb,Returned,1
+1,3,2025-04-13 22:06:50,bread,Taken,1
+1,4,2025-04-13 22:06:50,bread,Returned,1
+1,5,2025-04-13 22:06:50,leek,Taken,1
+1,6,2025-04-13 22:06:50,leek,Returned,1
+1,7,2025-04-13 22:06:50,egg,Taken,1
+1,8,2025-04-13 22:06:51,egg,Returned,1
+1,9,2025-04-13 22:06:51,chicken,Taken,1
+1,10,2025-04-13 22:06:51,chicken,Returned,1
+1,11,2025-04-13 22:06:51,lettuce,Taken,1
+1,12,2025-04-13 22:06:51,lettuce,Returned,1
+1,13,2025-04-13 22:06:51,tomato,Taken,1
+2,1,2025-04-13 22:07:05,lamb,Taken,1
+2,2,2025-04-13 22:07:05,lamb,Returned,1
+2,3,2025-04-13 22:07:06,bread,Taken,1
+2,4,2025-04-13 22:07:06,bread,Returned,1
+2,5,2025-04-13 22:07:06,leek,Taken,1
+2,6,2025-04-13 22:07:06,leek,Returned,1
+2,7,2025-04-13 22:07:06,egg,Taken,1
+2,8,2025-04-13 22:07:06,egg,Returned,1
+2,9,2025-04-13 22:07:06,chicken,Taken,1
+2,10,2025-04-13 22:07:06,chicken,Returned,1
+2,11,2025-04-13 22:07:06,lettuce,Taken,1
+2,12,2025-04-13 22:07:07,lettuce,Returned,1
+2,13,2025-04-13 22:07:07,tomato,Taken,1

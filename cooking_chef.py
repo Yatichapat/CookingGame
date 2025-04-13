@@ -182,15 +182,16 @@ class Chef:
 
             # Initialize last_id
             last_id = 0
+            records = []
 
             # Read existing records if file exists
-            if file_exists:
-                with open(filename, 'r') as csvfile:
+            if file_exists and os.path.getsize(filename) > 0:
+                with open(filename, 'r', newline='') as csvfile:
                     reader = csv.DictReader(csvfile)
                     records = list(reader)
+                    ids = [int(record['id']) for record in records if 'id' in record and record['id'].isdigit()]
                     if records:
-                        # Convert string IDs to integers for comparison
-                        last_id = max(int(record['id']) for record in records)
+                        last_id = max(int(record.get('id', record.get(' id', '0')).strip()) for record in records)
 
             # Open file in append mode
             with open(filename, 'a', newline='') as csvfile:
@@ -205,7 +206,7 @@ class Chef:
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-                if not file_exists:
+                if not file_exists or os.path.getsize(filename) == 0:
                     writer.writeheader()
 
                 record = {
@@ -219,10 +220,8 @@ class Chef:
                 }
 
                 self.__last_log_time = current
-                print("Saving session data:", record)  # Debug print
+                print("Saving KEYSTROKE data:", record)  # Debug print
                 writer.writerow(record)
 
-        except IOError as e:
-            print(f"Error writing to CSV file: {e}")
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected KEYSTROKE error: {e}")
