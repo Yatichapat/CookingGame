@@ -56,20 +56,32 @@ class Menu:
         self.__serving_pad = None
         self.__score = 0
 
-        # Tracking variables
+        # Tracking variables order
         self.__menu_appearance = {item: 0 for item in self.__MENU_ITEMS}  # How often each item appears as order
         self.__successful_orders = {item: 0 for item in self.__MENU_ITEMS}  # How often each was successfully served
         self.__session_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.__mistakes_per_order = []
+
+        # Tracking mistakes
+        self.__detailed_mistakes = []
         self.__current_mistakes = 0
 
         self.__images = {
             item: pg.transform.scale(Config.get_image(item), (90, 90)) for item in self.__MENU_ITEMS
         }
 
+    def log_mistake(self, mistake_type="unknown", extra_info=None):
+        self.__current_mistakes += 1
+        self.__detailed_mistakes.append({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": mistake_type,
+            "info": extra_info or ""
+        })
+        self.save_to_mistake()
+
     def serve_dish(self, plate):
         """Check if plate matches any order and calculate score"""
         if not self.orders:
+            self.log_mistake("no_orders", "No orders available")
             return 0
 
         # Find matching dish type
@@ -78,17 +90,12 @@ class Menu:
             if ingredient.get_type() in self.__MENU_ITEMS:
                 prepared_type = ingredient.get_type()
                 break
-
-        if not prepared_type:
-            self.log_mistake()
-            return 0
+            else:
+                self.log_mistake("wrong_dish", f"served: {prepared_type}")
 
         # Process matching order
         for order in list(self.orders):
             if order["name"] == prepared_type:
-                # if not self.is_dish_correct(plate, order["name"]):
-                #     self.log_mistake()
-                #     return 0
 
                 # Calculate points
                 time_remaining = order["duration"] - (pg.time.get_ticks() - order["start_time"])
@@ -96,7 +103,6 @@ class Menu:
 
                 # Remove fulfilled order
                 self.orders.remove(order)
-                self.record_mistakes()
 
                 # Track successful order
                 self.__successful_orders[prepared_type] += 1
@@ -105,29 +111,9 @@ class Menu:
                 self.__score += points
 
                 return points
-        self.log_mistake()
-        return 0
+            self.log_mistake("wrong_dish", f"served: {prepared_type}")
 
-    def is_dish_correct(self, plate, expected_dish):
-        dish_requirements = {
-            "sandwich": ["bread", "lettuce", "tomato", "cheese"],
-            "egg fried": ["egg"],
-            "chicken fried": ["chicken"],
-            "lamb fried": ["lamb"]
-        }
-
-        plate_ingredients = [ing.get_type() for ing in plate.get_ingredients()]
-        required_ingredients = dish_requirements.get(expected_dish, [])
-
-        # Check if all required ingredients are present
-        return all(ing in plate_ingredients for ing in required_ingredients)
-
-    def log_mistake(self):
-        self.__current_mistakes += 1
-
-    def record_mistakes(self):
-        self.__mistakes_per_order.append(self.__current_mistakes)
-        self.__current_mistakes = 0
+            return 0
 
     def reset(self):
         """Save session data before resetting"""
@@ -136,7 +122,9 @@ class Menu:
         self.__menu_appearance = {item: 0 for item in self.__MENU_ITEMS}
         self.__successful_orders = {item: 0 for item in self.__MENU_ITEMS}
         self.__session_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.__mistakes_per_order = []
+
+        self.__current_mistakes = 0
+        self.__detailed_mistakes = []
 
     def add_order(self):
         """Add a new random menu item to the queue."""
@@ -208,6 +196,28 @@ class Menu:
             pg.draw.rect(screen, Config.get_config('GREEN'),
                          (bar_x, bar_y, int(bar_width * progress), bar_height),
                          border_radius=4)
+
+    def save_to_mistake(self):
+        file_name = "mistake.csv"
+        try:
+            file_exist = os.path.exists(file_name)
+
+            with open(file_name, 'a', newline='') as csv_file:
+                fieldnames = ['session_start', 'timestamp', 'mistake_type', 'info']
+                writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+                if not file_exist:
+                    writer.writeheader()
+
+                for mistake in self.__detailed_mistakes:
+                    writer.writerow({
+                        'timestamp': mistake['timestamp'],
+                        'mistake_type': mistake['type'],
+                        'info': mistake['info']
+                    })
+
+        except Exception as e:
+            print(f"Error saving detailed mistake log: {e}")
 
     def save_to_order_per_session(self, force_save=False):
         """Save statistics to CSV, with option to force immediate save"""

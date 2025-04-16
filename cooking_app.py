@@ -9,6 +9,7 @@ from cooking_served import Serving
 from cooking_ui import *
 from cooking_tool import *
 from cooking_groceries import Groceries
+from cooking_stat import StatsWindow
 
 
 class GameApp:
@@ -119,15 +120,20 @@ class GameApp:
                         if tool == 'pan':
                             self.__pan.put_ingredient_in_pan(self.__held_ingredient)
                             self.__held_ingredient = None
+
                         elif tool == 'cut':
                             self.__cutting_board.put_ingredient_in_cutting_board(self.__held_ingredient)
                             self.__cutting_board.cook_ingredients()
                             self.__held_ingredient = None
+
                         elif tool == 'plate':
                             self.__plate.add_ingredient(self.__held_ingredient)
                             self.__held_ingredient = None
+
                         elif tool == 'trash':
+                            self.__trash.throw_into_bin(self.__held_ingredient)
                             self.__held_ingredient = None
+
                         elif tool == 'pad':
                             if self.__held_plate:
                                 if self.__serving.add_plate(self.__held_plate):
@@ -325,8 +331,7 @@ class GameApp:
                         return
 
                     elif stat.collidepoint(mouse_pos):
-                        # self.show_statistics()  # Function to display statistics
-                        pass
+                        StatsWindow()
 
                     elif exit_.collidepoint(mouse_pos):
                         # Only save when game is exiting

@@ -394,9 +394,10 @@ class Plate:
 class TrashBin:
     def __init__(self, x, y):
         self.__position = (x, y)
-        self.__mistakes = 0
+        self.__menu = Menu()
         self.__image = pg.image.load("images/trashbin.png")
         self.__image = pg.transform.scale(self.__image, (100, 100))
+        self.__throw = []
 
     def draw(self, screen):
         screen.blit(self.__image, self.__position)
@@ -404,8 +405,8 @@ class TrashBin:
     def get_position(self):
         return self.__position
 
-    def get_mistakes(self):
-        return self.__mistakes
-
-    def increment_mistakes(self):
-        self.__mistakes += 1
+    def throw_into_bin(self, ingredient):
+        """Throw an ingredient into the trash bin."""
+        self.__throw.append(ingredient.get_type())
+        print("Throw!!!", self.__throw)
+        self.__menu.log_mistake("throw away", f"served: {ingredient.get_type()}")

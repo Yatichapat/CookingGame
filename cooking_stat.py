@@ -3,6 +3,7 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
+import numpy as np
 
 
 class StatsWindow:
@@ -170,17 +171,88 @@ class StatsWindow:
 
     def create_mistake_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
-        tab_control.add(tab, text='Settings')
+        tab_control.add(tab, text='Mistakes')
 
-        label = ttk.Label(tab, text="Settings & Filters", font=self.font_topic)
+        label = ttk.Label(tab, text="Mistakes during the game session", font=self.font_topic)
         label.pack(pady=20)
 
     def create_ingredients_used_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Ingredients Used')
 
-        label = ttk.Label(tab, text="Ingredients Used Statistics", font=self.font_topic)
-        label.pack(pady=20)
+        label = ttk.Label(tab, text="Ingredients Taken Summary", font=self.font_topic)
+        label.pack(pady=10)
+
+        try:
+            # Load the CSV
+            df = pd.read_csv('ingredient_used.csv', skipinitialspace=True)
+
+            # Filter only 'Taken'
+            taken_df = df[df['action'].str.lower() == 'taken']
+
+            # Group and sum quantities
+            total_taken = taken_df.groupby('ingredient')['quantity'].sum()
+
+            if total_taken.empty:
+                ttk.Label(tab, text="No 'Taken' data to show.").pack(pady=10)
+                return
+
+            # Layout frame: pie chart on left, distribution on right
+            content_frame = ttk.Frame(tab)
+            content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+            # ---- Left: Pie Chart with Pastel Colors ----
+            fig, ax = plt.subplots(figsize=(5, 5))
+
+            # Define pastel colors using the Pastel1 colormap
+            pastel_cmap = plt.get_cmap("Pastel1")
+            colors = pastel_cmap(np.linspace(0, 1, len(total_taken)))
+
+            ax.pie(
+                total_taken.values,
+                labels=total_taken.index,
+                autopct='%1.1f%%',
+                startangle=90,
+                textprops={'fontsize': 9},
+                colors=colors  # Apply pastel colors here
+            )
+            ax.set_title('Ingredients Taken', fontsize=12)
+
+            canvas = FigureCanvasTkAgg(fig, master=content_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            # ---- Right: Distribution Text ----
+            dist_frame = ttk.Frame(content_frame)
+            dist_frame.pack(side=tk.LEFT, fill=tk.Y, padx=20)
+
+            ttk.Label(dist_frame, text="Quantity Taken per Ingredient", font=('Helvetica', 10, 'bold')).pack(anchor='w')
+
+            text_widget = tk.Text(dist_frame, height=15, width=30, font=('Courier', 10))
+            text_widget.pack(pady=5)
+
+            for ingredient, qty in total_taken.items():
+                text_widget.insert(tk.END, f"{ingredient:<15} {qty}\n")
+
+            text_widget.config(state=tk.DISABLED)
+
+            max_ingredient = total_taken.idxmax()
+            max_qty = total_taken.max()
+            min_ingredient = total_taken.idxmin()
+            min_qty = total_taken.min()
+
+            summary_label = ttk.Label(
+                dist_frame,
+                text=f"Most Taken:      {max_ingredient}    ({max_qty})\n\n"
+                     f"Least Taken:     {min_ingredient}    ({min_qty})",
+                font=('Helvetica', 10, 'bold'),
+            )
+            summary_label.pack(anchor='w', pady=(10, 5))
+
+        except FileNotFoundError:
+            ttk.Label(tab, text="Error: File 'ingredient_used.csv' not found.").pack(pady=10)
+        except Exception as e:
+            ttk.Label(tab, text=f"Error: {str(e)}").pack(pady=10)
 
     def create_total_time_per_dish_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
@@ -188,7 +260,6 @@ class StatsWindow:
 
         label = ttk.Label(tab, text="Total Time per Dish Statistics", font=self.font_topic)
         label.pack(pady=20)
-
 
 
 if __name__ == "__main__":
