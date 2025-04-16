@@ -11,18 +11,19 @@ we must try to avoid them as much as possible.
 ```bash 
 https://github.com/Yatichapat/CookingGame.git
 ```
+### 2. Change directory
+```bash
+cd CookingGame
+```
 
-### 2.  Install requirments
+### 3.  Install requirments
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3.  Run the game
+### 4.  Run the game
 ```bash
 python cooking_app.py
 ```
-or
-```bash
-python3 cooking_app.py
-```
+
 
