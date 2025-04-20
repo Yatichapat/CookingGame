@@ -275,8 +275,30 @@ class Equipments:
         screen.blit(tool_image, (tool_x, tool_y))
 
         # Draw all ingredients on the tool
-        for ingredient, _ in self.__ingredients:
+        for ingredient_data in self.__ingredients:
+            ingredient, start_time = ingredient_data
             ingredient.draw_at(screen, tool_x + 14, tool_y + 25)
+
+            if not isinstance(self, CuttingBoard):
+                current_time = pg.time.get_ticks()
+                elapsed_time = (current_time - start_time) / 1000
+
+                ingredient_type = ingredient.get_type()
+                total_time = 0
+                if ingredient_type == "egg":
+                    total_time = 3
+                elif ingredient_type in ["lamb", "chicken", "chicken sliced"]:
+                    total_time = 8
+                else:
+                    continue
+
+                progress = min(max(elapsed_time / total_time, 0), 1)
+
+                # Bar background (red)
+                pg.draw.rect(screen, Config.get_config("RED"), (tool_x + 7, tool_y, 50, 5), border_radius=3)
+
+                # Bar progress (green)
+                pg.draw.rect(screen, Config.get_config("GREEN"), (tool_x + 7, tool_y, 50 * progress, 5), border_radius=3)
 
     def set_position(self, new_position):
         self.__position = new_position

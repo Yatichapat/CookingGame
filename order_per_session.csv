@@ -1,4 +1,4 @@
-session_start, session_end, total_score, sandwich, egg fried, chicken fried, lamb fried,chicken drumpstick fried
+session_start,session_end,total_score,sandwich,egg fried,chicken fried,lamb fried,chicken drumpstick fried
 2025-04-02 00:16:10,2025-04-02 00:16:59,151,0,1,1,1,0
 2025-04-02 00:21:05,2025-04-02 00:21:56,126,1,0,1,1,0
 2025-04-02 00:23:23,2025-04-02 00:23:58,97,1,0,0,1,0
@@ -26,3 +26,5 @@ session_start, session_end, total_score, sandwich, egg fried, chicken fried, lam
 2025-04-13 13:49:00,2025-04-13 13:50:27,128,1,1,0,1,0
 2025-04-13 15:20:09,2025-04-13 15:20:32,0,0,0,0,0,0
 2025-04-13 15:30:57,2025-04-13 15:31:26,48,0,0,0,0,1
+2025-04-16 14:34:12,2025-04-16 14:35:50,118,1,1,0,0,1
+2025-04-19 20:32:33,2025-04-19 20:36:04,88,0,1,2,0,0

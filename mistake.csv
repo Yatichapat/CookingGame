@@ -1,4 +1,4 @@
-id, timestamp, mistake_type, info
+timestamp,mistake_type,info
 2025-04-14 20:26:00,throw away,served: lamb
 2025-04-14 20:26:02,throw away,served: bread
 2025-04-14 20:27:02,throw away,served: lamb
@@ -8,3 +8,15 @@ id, timestamp, mistake_type, info
 2025-04-14 20:27:04,throw away,served: bread
 2025-04-14 20:27:05,throw away,served: leek
 2025-04-14 20:27:11,wrong_dish,served: egg fried
+2025-04-16 14:33:13,wrong_dish,served: egg fried
+2025-04-19 20:33:22,wrong_dish,served: lamb fried
+2025-04-19 20:33:22,wrong_dish,served: lamb fried
+2025-04-19 20:34:44,wrong_dish,served: sandwich
+2025-04-19 20:33:22,wrong_dish,served: lamb fried
+2025-04-19 20:34:44,wrong_dish,served: sandwich
+2025-04-19 20:35:01,wrong_dish,served: lamb fried
+2025-04-19 21:36:11,wrong_dish,served: egg fried
+2025-04-19 21:36:11,wrong_dish,served: egg fried
+2025-04-19 21:36:33,wrong_dish,served: chicken fried
+2025-04-19 21:38:47,wrong_dish,served: lamb fried
+2025-04-19 21:42:09,wrong_dish,served: chicken fried

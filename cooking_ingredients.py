@@ -203,7 +203,7 @@ class Menu:
             file_exist = os.path.exists(file_name)
 
             with open(file_name, 'a', newline='') as csv_file:
-                fieldnames = ['session_start', 'timestamp', 'mistake_type', 'info']
+                fieldnames = ['timestamp', 'mistake_type', 'info']
                 writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
                 if not file_exist:

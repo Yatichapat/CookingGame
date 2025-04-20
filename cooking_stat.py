@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import numpy as np
+import os
 
 
 class StatsWindow:
@@ -38,8 +39,166 @@ class StatsWindow:
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Overall Stats')
 
-        label = ttk.Label(tab, text="Overall Statistics", font=self.font_topic)
-        label.pack(pady=20)
+        # Main container with scrollbar
+        main_frame = ttk.Frame(tab)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        canvas = tk.Canvas(main_frame)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=canvas.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        content_frame = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=content_frame, anchor="nw")
+
+        # Title
+        ttk.Label(content_frame,
+                  text="Overall Game Statistics",
+                  font=("Arial", 16, "bold")).pack(pady=20)
+
+        try:
+            # Load all relevant data
+            order_df = pd.read_csv('order_per_session.csv') if os.path.exists('order_per_session.csv') else None
+            mistake_df = pd.read_csv('mistake.csv') if os.path.exists('mistake.csv') else None
+            ingredient_df = pd.read_csv('ingredient_used.csv') if os.path.exists('ingredient_used.csv') else None
+            keystroke_df = pd.read_csv('keystroke_per_dish.csv') if os.path.exists('keystroke_per_dish.csv') else None
+
+            # Calculate basic stats
+            total_sessions = len(order_df)
+            max_score = order_df['total_score'].max()
+            avg_score = order_df['total_score'].mean() if 'total_score' in order_df.columns else 0
+
+            # Calculate total orders safely
+            dish_columns = [col for col in
+                            ['sandwich', 'egg fried', 'chicken fried', 'lamb fried', 'chicken drumpstick fried']
+                            if col in order_df.columns]
+            total_orders = order_df[dish_columns].sum().sum() if dish_columns else 0
+
+            # Calculate time metrics safely
+            if all(col in order_df.columns for col in ['session_start', 'session_end']):
+                order_df['session_start'] = pd.to_datetime(order_df['session_start'])
+                order_df['session_end'] = pd.to_datetime(order_df['session_end'])
+                order_df['duration'] = (order_df['session_end'] - order_df['session_start']).dt.total_seconds()
+                total_time = order_df['duration'].sum()
+                avg_time = order_df['duration'].mean()
+            else:
+                total_time = 0
+                avg_time = 0
+
+            # Calculate other metrics safely
+            total_mistakes = len(mistake_df) if mistake_df is not None else 0
+            total_keystrokes = keystroke_df[
+                'total_key'].sum() if keystroke_df is not None and 'total_key' in keystroke_df.columns else 0
+
+            # Create stats frame
+            stats_frame = ttk.Frame(content_frame, padding=10)
+            stats_frame.pack(fill=tk.X, pady=10)
+
+            # Key metrics section
+            metrics = [
+                ("Total Sessions Played", f"{total_sessions}"),
+                ("Total Orders Completed", f"{total_orders}"),
+                ("Max Score Earned", f"{max_score}"),
+                ("Average Score per Session", f"{avg_score:.1f}"),
+                ("Total Mistakes Made", f"{total_mistakes}"),
+                ("Total Keystrokes", f"{total_keystrokes}"),
+                ("Total Play Time", f"{total_time:.1f} seconds"),
+                ("Average Session Duration", f"{avg_time:.1f} seconds")
+            ]
+
+            # Configure two equal columns per side (4 total)
+            for col in range(4):
+                stats_frame.grid_columnconfigure(col, weight=1)
+
+            for i, (label, value) in enumerate(metrics):
+                value_str = f"{value:.1f}" if isinstance(value, float) else str(value)
+                ttk.Label(stats_frame, text=label, font=("Arial", 10, "bold")).grid(
+                    row=i // 2, column=(i % 2) * 2, padx=10, pady=5, sticky="nsew")
+                ttk.Label(stats_frame, text=value_str, font=("Arial", 10)).grid(
+                    row=i // 2, column=(i % 2) * 2 + 1, padx=10, pady=5, sticky="nsew")
+
+            # Add visualizations only if we have data
+            fig = plt.Figure(figsize=(10, 8))
+            gs = fig.add_gridspec(2, 2)
+
+            # Score distribution (if available)
+            ax1 = fig.add_subplot(gs[0, 0])
+            if 'total_score' in order_df.columns:
+                ax1.hist(order_df['total_score'], bins=10, color='skyblue', edgecolor='black')
+                ax1.set_title('Score Distribution per Session')
+                ax1.set_xlabel('Score')
+                ax1.set_ylabel('Frequency')
+            else:
+                ax1.text(0.5, 0.5, 'No score data available', ha='center', va='center')
+                ax1.set_axis_off()
+
+            # Time vs Score (if available)
+            ax2 = fig.add_subplot(gs[0, 1])
+            if all(col in order_df.columns for col in ['duration', 'total_score']):
+                ax2.scatter(order_df['duration'], order_df['total_score'], alpha=0.6)
+                ax2.set_title('Session Duration vs Score')
+                ax2.set_xlabel('Duration (seconds)')
+                ax2.set_ylabel('Score')
+            else:
+                ax2.text(0.5, 0.5, 'No duration/score data', ha='center', va='center')
+                ax2.set_axis_off()
+
+            # Mistake types (if available)
+            ax3 = fig.add_subplot(gs[1, 0])
+            if mistake_df is not None and 'type' in mistake_df.columns:
+                mistake_counts = mistake_df['type'].value_counts()
+                ax3.bar(mistake_counts.index, mistake_counts.values, color='salmon')
+                ax3.set_title('Mistake Types')
+                ax3.tick_params(axis='x', rotation=45)
+            else:
+                ax3.text(0.5, 0.5, 'No mistake data', ha='center', va='center')
+                ax3.set_axis_off()
+
+            # Keystroke distribution (if available)
+            ax4 = fig.add_subplot(gs[1, 1])
+            if keystroke_df is not None and all(col in keystroke_df.columns for col in ['up', 'down', 'left', 'right']):
+                keystroke_cols = ['up', 'down', 'left', 'right']
+                keystroke_totals = keystroke_df[keystroke_cols].sum()
+                ax4.pie(keystroke_totals, labels=keystroke_totals.index, autopct='%1.1f%%')
+                ax4.set_title('Keystroke Distribution')
+            else:
+                ax4.text(0.5, 0.5, 'No keystroke data', ha='center', va='center')
+                ax4.set_axis_off()
+
+            fig.tight_layout(pad=3.0)
+
+            # Embed in tkinter
+            chart_canvas = FigureCanvasTkAgg(fig, master=content_frame)
+            chart_canvas.draw()
+            chart_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        except Exception as e:
+            error_msg = f"Error loading data: {str(e)}\n\nAvailable columns in order_per_session.csv:\n"
+            try:
+                if os.path.exists('order_per_session.csv'):
+                    test_df = pd.read_csv('order_per_session.csv')
+                    error_msg += f"{', '.join(test_df.columns)}"
+            except:
+                error_msg += "Could not read file"
+
+            ttk.Label(content_frame,
+                      text=error_msg,
+                      foreground="red",
+                      wraplength=800).pack()
+
+        # Configure scrolling
+        def on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        content_frame.bind("<Configure>", on_configure)
+
+        # Mousewheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
     def load_stats(self):
         # Placeholder for loading stats logic
@@ -144,30 +303,57 @@ class StatsWindow:
 
     def create_order_per_dish_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
-        tab_control.add(tab, text='Order')
+        tab_control.add(tab, text='Order Analysis')
 
-        label = ttk.Label(tab, text="Player Performance Statistics", font=self.font_topic)
+        label = ttk.Label(tab, text="Order Patterns Across Sessions", font=self.font_topic)
         label.pack(pady=20)
 
         # Load CSV
         df = pd.read_csv('order_per_session.csv', skipinitialspace=True, on_bad_lines='skip')
 
-        # Sum total orders for each dish
-        dish_columns = ['sandwich', 'egg fried', 'chicken fried', 'lamb fried']
-        order_counts = df[dish_columns].sum()
+        # Convert timestamps to datetime and calculate session duration
+        df['session_start'] = pd.to_datetime(df['session_start'])
+        df['session_end'] = pd.to_datetime(df['session_end'])
+        df['duration_sec'] = (df['session_end'] - df['session_start']).dt.total_seconds()
 
-        # Plot
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.bar(order_counts.index, order_counts.values, color='lightgreen', edgecolor='black')
+        dish_columns = ['sandwich', 'egg fried', 'chicken fried', 'lamb fried', 'chicken drumpstick fried']
 
-        ax.set_title('Total Orders per Dish')
-        ax.set_xlabel('Dish')
-        ax.set_ylabel('Total Ordered')
+        # Create scatter plot
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-        # Show on Tkinter window
+        # Plot each dish type with different markers
+        markers = ['o', 's', 'D', '^', 'v']  # Circle, square, diamond, triangle up/down
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+
+        for i, dish in enumerate(dish_columns):
+            ax.scatter(
+                x=df['duration_sec'],
+                y=df[dish] * df['total_score'],  # Weight orders by score
+                label=dish.title(),
+                marker=markers[i],
+                color=colors[i],
+                s=100,  # Marker size
+                alpha=0.7,
+                edgecolors='w'
+            )
+
+        # Customize plot
+        ax.set_title('Order Patterns by Session Duration', pad=20)
+        ax.set_xlabel('Session Duration (seconds)')
+        ax.set_ylabel('Order Value (Count × Score)')
+        ax.grid(True, linestyle=':', alpha=0.3)
+        ax.legend(title="Dish Types")
+
+        # Add trendlines
+        for dish in dish_columns:
+            z = np.polyfit(df['duration_sec'], df[dish] * df['total_score'], 1)
+            p = np.poly1d(z)
+            ax.plot(df['duration_sec'], p(df['duration_sec']), '--', alpha=0.3)
+
+        # Show in Tkinter
         canvas = FigureCanvasTkAgg(fig, master=tab)
         canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def create_mistake_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
@@ -175,6 +361,30 @@ class StatsWindow:
 
         label = ttk.Label(tab, text="Mistakes during the game session", font=self.font_topic)
         label.pack(pady=20)
+
+        try:
+            df = pd.read_csv('mistake.csv', skipinitialspace=True)
+
+            # Group by mistake type and count occurrences
+            mistake_counts = df['mistake_type'].value_counts()
+
+            # Plot
+            fig, ax = plt.subplots(figsize=(8, 6))
+            ax.bar(mistake_counts.index, mistake_counts.values, color='salmon', edgecolor='black')
+
+            ax.set_title('Mistakes Made')
+            ax.set_xlabel('Mistake Type')
+            ax.set_ylabel('Count')
+
+            # Show on Tkinter window
+            canvas = FigureCanvasTkAgg(fig, master=tab)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        except FileNotFoundError:
+            ttk.Label(tab, text="Error: File 'mistake.csv' not found.").pack(pady=10)
+        except Exception as e:
+            ttk.Label(tab, text=f"Error: {str(e)}").pack(pady=10)
 
     def create_ingredients_used_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
@@ -184,7 +394,6 @@ class StatsWindow:
         label.pack(pady=10)
 
         try:
-            # Load the CSV
             df = pd.read_csv('ingredient_used.csv', skipinitialspace=True)
 
             # Filter only 'Taken'
@@ -214,7 +423,7 @@ class StatsWindow:
                 autopct='%1.1f%%',
                 startangle=90,
                 textprops={'fontsize': 9},
-                colors=colors  # Apply pastel colors here
+                colors=colors
             )
             ax.set_title('Ingredients Taken', fontsize=12)
 
