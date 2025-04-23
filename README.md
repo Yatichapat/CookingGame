@@ -32,6 +32,7 @@ python cooking_app.py
 ```
 
 ## About the Gameplay
+### This game only pressing the enter key and e key
 - ingredients are contained in fridge. Press e to open the fridge and add ingredients to the cooking pan by pressing the 
   enter key
 - Press the enter key near the pan to start cooking
@@ -39,4 +40,4 @@ python cooking_app.py
 - You can also put the food back in the pan, in the fridge or throw it away.
 - The food will be served on the blue pad
 - You can add more ingredients in the fridge by pressing the enter key at the red button and take the paper bag to the fridge.
-- 
+- When bring the paper bag to the fridge, you can add the ingredients in the bag to the fridge by pressing the e key
