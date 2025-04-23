@@ -217,7 +217,9 @@ class GameApp:
         """Drop the held ingredient"""
         if self.__held_ingredient:
             dropped_food = self.__held_ingredient
-            dropped_food.set_position(self.__chef.get_position())
+            chef_x, chef_y = self.__chef.get_position()
+            # Store the absolute position, not relative to chef
+            dropped_food.set_position((chef_x, chef_y))
 
             self.__dropped_ingredient.append(dropped_food)
             self.__held_ingredient = None
@@ -225,14 +227,18 @@ class GameApp:
     def drop_all_to_the_world(self):
         if self.__held_plate:
             dropped_plate = self.__held_plate
-            dropped_plate.set_position(self.__chef.get_position())
+            chef_x, chef_y = self.__chef.get_position()
+            # Store the absolute position, not relative to chef
+            dropped_plate.set_position((chef_x, chef_y))
 
             self.__dropped_plate.append(dropped_plate)
             self.__held_plate = None
 
     def is_near_dropped_item(self, item_position):
         chef_x, chef_y = self.__chef.get_position()
-        return ((chef_x - item_position[0]) ** 2 + (chef_y - item_position[1]) ** 2) ** 0.5 < 50
+        # Increase the pickup radius slightly to make it easier
+        distance = ((chef_x - item_position[0]) ** 2 + (chef_y - item_position[1]) ** 2) ** 0.5
+        return distance < 75
 
     def is_near_tool(self):
         tools = {
@@ -295,12 +301,16 @@ class GameApp:
                 if event.type == pg.QUIT:
                     self.__menu.save_to_order_per_session(force_save=True)
                     pg.quit()
+                    Config.get_sound("click").play()
                     exit()
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     mouse_pos = pg.mouse.get_pos()
 
                     if restart_button.collidepoint(mouse_pos):
+                        # sounds play
+                        Config.get_sound("click").play()
+
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
                         self.__chef.save_keystrokes_to_csv()
@@ -308,6 +318,9 @@ class GameApp:
                         return
 
                     elif exit_button.collidepoint(mouse_pos):
+                        # sounds play
+                        Config.get_sound("click").play()
+
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
                         self.__chef.save_keystrokes_to_csv()
@@ -320,20 +333,31 @@ class GameApp:
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
+                    # sounds play
+                    Config.get_sound("click").play()
                     self.__running = False
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     mouse_pos = pg.mouse.get_pos()
 
                     if start.collidepoint(mouse_pos):
+                        # sounds play
+                        Config.get_sound("click").play()
+
                         self.__start_game = True
                         self.restart_game()
                         return
 
                     elif stat.collidepoint(mouse_pos):
+                        # sounds play
+                        Config.get_sound("click").play()
+
                         StatsWindow()
 
                     elif exit_.collidepoint(mouse_pos):
+                        # sounds play
+                        Config.get_sound("click").play()
+
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
                         self.__chef.save_keystrokes_to_csv()
@@ -365,6 +389,10 @@ class GameApp:
             for ingredient in self.__dropped_ingredient:
                 x, y = ingredient.get_position()
                 ingredient.draw_at(self.__screen, x + 10, y)
+
+            for plate in self.__dropped_plate:
+                x, y = plate.get_position()
+                plate.draw_at(self.__screen, x + 10, y)
 
             if self.__held_plate:
                 x, y = self.__chef.get_position()

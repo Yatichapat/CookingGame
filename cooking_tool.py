@@ -40,7 +40,6 @@ class Fridge:
         """Record ingredient usage to memory and CSV"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
         record = {
             "session_id": self.__session_id,
             "id": len(self.__usage_data) + 1,
@@ -126,7 +125,6 @@ class Fridge:
 
         self.__record_usage(ingredient.get_type(), "Returned")
 
-
     def draw(self, screen):
         """Draws the fridge and its ingredients if open."""
         fridge_x, fridge_y = self.__position
@@ -173,7 +171,6 @@ class Fridge:
         return max(session_ids, default=0) + 1
 
 
-
 class Equipments:
     def __init__(self, x, y, image_path):
         self.__position = (x, y)
@@ -212,16 +209,22 @@ class Equipments:
             # SLICING LOGIC (primarily for CuttingBoard)
             elif isinstance(self, CuttingBoard):
                 if ingredient.get_type() == "tomato" and elapsed_time >= 0:
+                    Config.get_sound("cutting").play()
                     transformed = Ingredients(*ingredient.get_position(), "tomato sliced")
                 elif ingredient.get_type() == "lettuce" and elapsed_time >= 0:
+                    Config.get_sound("cutting").play()
                     transformed = Ingredients(*ingredient.get_position(), "lettuce sliced")
                 elif ingredient.get_type() == "cheese" and elapsed_time >= 0:
+                    Config.get_sound("cutting").play()
                     transformed = Ingredients(*ingredient.get_position(), "cheese sliced")
                 elif ingredient.get_type() == "chicken" and elapsed_time >= 0:
+                    Config.get_sound("cutting").play()
                     transformed = Ingredients(*ingredient.get_position(), "chicken sliced")
                 elif ingredient.get_type() == "bread" and elapsed_time >= 0:
+                    Config.get_sound("cutting").play()
                     transformed = Ingredients(*ingredient.get_position(), "bread sliced")
                 elif ingredient.get_type() == "chicken to slice" and elapsed_time >= 0:
+                    Config.get_sound("cutting").play()
                     transformed = Ingredients(*ingredient.get_position(), "chicken sliced")
 
             if transformed:
@@ -286,7 +289,7 @@ class Equipments:
                 ingredient_type = ingredient.get_type()
                 total_time = 0
                 if ingredient_type == "egg":
-                    total_time = 3
+                    total_time = 0
                 elif ingredient_type in ["lamb", "chicken", "chicken sliced"]:
                     total_time = 8
                 else:
@@ -430,5 +433,5 @@ class TrashBin:
     def throw_into_bin(self, ingredient):
         """Throw an ingredient into the trash bin."""
         self.__throw.append(ingredient.get_type())
-        print("Throw!!!", self.__throw)
+        Config.get_sound("trash").play()
         self.__menu.log_mistake("throw away", f"served: {ingredient.get_type()}")

@@ -77,6 +77,7 @@ class KitchenMap:
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.__background_color)
+        Config.get_sound("game_start").play(fade_ms=5000)
         self.draw_tiles()
         self.draw_wall()
         self.draw_counter_top()
@@ -101,6 +102,8 @@ class GameUI:
 
         if remaining_time <= 0:
             GameUI.game_over = True
+            if GameUI.game_over:
+                Config.get_sound("game_start").stop()
             remaining_time = 0
         return remaining_time
 

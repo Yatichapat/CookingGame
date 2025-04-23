@@ -1,4 +1,5 @@
 import pygame as pg
+import os
 
 
 class Config:
@@ -84,6 +85,40 @@ class Config:
         """Retrieve an image from the cache."""
         return cls.__IMAGE_CACHE.get(ingredient_type, pg.Surface((50, 50)))  # Default placeholder
 
+    __SOUND_CACHE = {}
+
+    @classmethod
+    def load_sounds(cls):
+        """Pre-loads and caches all sounds"""
+        if not pg.mixer.get_init():
+            pg.mixer.init()
+
+        sound_paths = {
+            "click": "sounds/click.mp3",
+            "game_start": "sounds/game_start_song.mp3",
+            "trash": "sounds/trash.mp3",
+            "cutting": "sounds/cutting.mp3",
+        }
+
+        for name, path in sound_paths.items():
+            try:
+                sound = pg.mixer.Sound(path)
+                # Set the volume for the sound
+                if name == "game_start":
+                    sound.set_volume(0.2)
+
+                cls.__SOUND_CACHE[name] = sound
+            except (FileNotFoundError, pg.error):
+                print(f"Warning: Sound not found for {name}")
+                # Create empty sounds as fallback
+                cls.__SOUND_CACHE[name] = pg.mixer.Sound(buffer=bytes(44))
+
+    @classmethod
+    def get_sound(cls, sound_name):
+        """Retrieve a sounds from the cache"""
+        return cls.__SOUND_CACHE.get(sound_name, cls.__SOUND_CACHE.get("error"))  # Fallback to error sounds
+
 
 # Ensure images are loaded before using them
 Config.load_images()
+Config.load_sounds()

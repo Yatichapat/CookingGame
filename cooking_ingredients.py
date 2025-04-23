@@ -90,13 +90,15 @@ class Menu:
             if ingredient.get_type() in self.__MENU_ITEMS:
                 prepared_type = ingredient.get_type()
                 break
-            else:
-                self.log_mistake("wrong_dish", f"served: {prepared_type}")
+
+        # If no valid menu item is found on the plate
+        if prepared_type is None:
+            self.log_mistake("wrong_dish", "No valid menu item on plate")
+            return 0
 
         # Process matching order
         for order in list(self.orders):
             if order["name"] == prepared_type:
-
                 # Calculate points
                 time_remaining = order["duration"] - (pg.time.get_ticks() - order["start_time"])
                 time_bonus = max(0, time_remaining // 1000)
@@ -111,9 +113,10 @@ class Menu:
                 self.__score += points
 
                 return points
-            self.log_mistake("wrong_dish", f"served: {prepared_type}")
 
-            return 0
+        # If we reach here, no matching order was found
+        self.log_mistake("wrong_dish", f"served: {prepared_type}")
+        return 0
 
     def reset(self):
         """Save session data before resetting"""
