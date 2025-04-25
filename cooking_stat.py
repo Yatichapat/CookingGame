@@ -191,6 +191,7 @@ class StatsWindow:
         # Configure scrolling
         def on_configure(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
+            canvas.itemconfig(1, width=event.width)
 
         content_frame.bind("<Configure>", on_configure)
 
@@ -198,7 +199,9 @@ class StatsWindow:
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+
+        content_frame.bind("MouseWheel>", _on_mousewheel)
 
     def load_stats(self):
         # Placeholder for loading stats logic

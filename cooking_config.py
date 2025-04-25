@@ -98,6 +98,8 @@ class Config:
             "game_start": "sounds/game_start_song.mp3",
             "trash": "sounds/trash.mp3",
             "cutting": "sounds/cutting.mp3",
+            "finish_cooking": "sounds/finishcooking.mp3",
+            "served": "sounds/handbell.mp3",
         }
 
         for name, path in sound_paths.items():

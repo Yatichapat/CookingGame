@@ -21,7 +21,7 @@ https://github.com/Yatichapat/CookingGame.git
 cd CookingGame
 ```
 
-### 3.  Install requirments
+### 3.  Install requirements
 ```bash
 pip install -r requirements.txt
 ```

@@ -14,6 +14,8 @@ class KitchenMap:
         self.__sidebar_width = 220
         self.__line_color = Config.get_config('BLACK')
 
+        Config.get_sound("game_start").play(fade_ms=5000)
+
     def draw_tiles(self):
         window_width = Config.get_config('WIN_SIZE_W')
         window_height = Config.get_config('WIN_SIZE_H')
@@ -77,7 +79,6 @@ class KitchenMap:
     def update(self):
         """Update the map by drawing tiles."""
         self.__screen.fill(self.__background_color)
-        Config.get_sound("game_start").play(fade_ms=5000)
         self.draw_tiles()
         self.draw_wall()
         self.draw_counter_top()

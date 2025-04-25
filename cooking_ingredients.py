@@ -111,6 +111,7 @@ class Menu:
 
                 points = 10 + time_bonus
                 self.__score += points
+                Config.get_sound("served").play()  # Play sound for successful order
 
                 return points
 

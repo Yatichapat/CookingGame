@@ -183,7 +183,7 @@ class Equipments:
     def add_ingredient(self, ingredient):
         """Adds an ingredient to the cooking tool and starts the timer."""
         start_time = pg.time.get_ticks()  # Start time when the ingredient is added
-        self.__ingredients.append([ingredient, start_time])
+        self.__ingredients.append([ingredient, start_time, False])
 
     def cook_ingredients(self):
         """Cooks ingredients based on real-time duration."""
@@ -191,20 +191,42 @@ class Equipments:
         current_time = pg.time.get_ticks()
         new_ingredients = []
 
-        for ingredient, start_time in self.__ingredients:
+        for ingredient_data in self.__ingredients:
+            # Safely unpack the data regardless of length
+            ingredient = ingredient_data[0]
+            start_time = ingredient_data[1]
+
+            # Add a sound_played flag if it doesn't exist
+            if len(ingredient_data) >= 3:
+                sound_played = ingredient_data[2]
+            else:
+                sound_played = False
+
             elapsed_time = (current_time - start_time) / 1000
             transformed = None
 
             # FRYING LOGIC (primarily for Pan)
             if isinstance(self, Pan):
+                # Check if this ingredient is newly transformed and needs sound
+                newly_transformed = False
+
                 if ingredient.get_type() == "egg" and elapsed_time >= 0:
                     transformed = Ingredients(*ingredient.get_position(), "egg fried")
+                    newly_transformed = True
                 elif ingredient.get_type() == "lamb" and elapsed_time >= 8:
                     transformed = Ingredients(*ingredient.get_position(), "lamb fried")
+                    newly_transformed = True
                 elif ingredient.get_type() == "chicken" and elapsed_time >= 8:
                     transformed = Ingredients(*ingredient.get_position(), "chicken fried")
+                    newly_transformed = True
                 elif ingredient.get_type() == "chicken sliced" and elapsed_time >= 8:
                     transformed = Ingredients(*ingredient.get_position(), "chicken drumstick fried")
+                    newly_transformed = True
+
+                # Play sound only if newly transformed and sound not played yet
+                if newly_transformed and not sound_played:
+                    Config.get_sound("finish_cooking").play()
+                    sound_played = True
 
             # SLICING LOGIC (primarily for CuttingBoard)
             elif isinstance(self, CuttingBoard):
@@ -229,17 +251,16 @@ class Equipments:
 
             if transformed:
                 transformed_items.append((ingredient, transformed))
-                new_ingredients.append([transformed, start_time])
+                new_ingredients.append([transformed, start_time, True])  # Mark sound as played
             else:
-                new_ingredients.append([ingredient, start_time])
+                new_ingredients.append([ingredient, start_time, sound_played])
 
         self.__ingredients = new_ingredients
 
     def get_cooked_ingredients(self):
         """Returns cooked ingredients and removes them from the tool."""
-        cooked = []
         for item in self.__ingredients[:]:
-            ingredient, _ = item
+            ingredient = item[0]  # Access the first element directly
             if "cooked" in ingredient.get_type() or "fried" in ingredient.get_type():
                 self.__ingredients.remove(item)  # Remove from the pan
                 return ingredient  # Return only one ingredient
@@ -252,7 +273,7 @@ class Equipments:
     def get_sliced_ingredients(self):
         sliced = []
         for item in self.__ingredients[:]:
-            ingredient, _ = item
+            ingredient = item[0]  # Access the first element directly
             if "sliced" in ingredient.get_type():
                 self.__ingredients.remove(item)  # Remove from the cutting board
                 return ingredient  # Return only one sliced ingredient
@@ -260,7 +281,8 @@ class Equipments:
 
     def is_ready_to_pick(self):
         """Checks if all ingredients are cooked and ready to be picked."""
-        for ingredient, start_time in self.__ingredients:
+        for item in self.__ingredients:
+            ingredient = item[0]  # Access the first element directly
             if ingredient.get_type() in ["egg", "lamb", "chicken"]:
                 return False
         return True
@@ -279,7 +301,8 @@ class Equipments:
 
         # Draw all ingredients on the tool
         for ingredient_data in self.__ingredients:
-            ingredient, start_time = ingredient_data
+            ingredient = ingredient_data[0]
+            start_time = ingredient_data[1]
             ingredient.draw_at(screen, tool_x + 14, tool_y + 25)
 
             if not isinstance(self, CuttingBoard):
@@ -301,7 +324,8 @@ class Equipments:
                 pg.draw.rect(screen, Config.get_config("RED"), (tool_x + 7, tool_y, 50, 5), border_radius=3)
 
                 # Bar progress (green)
-                pg.draw.rect(screen, Config.get_config("GREEN"), (tool_x + 7, tool_y, 50 * progress, 5), border_radius=3)
+                pg.draw.rect(screen, Config.get_config("GREEN"), (tool_x + 7, tool_y, 50 * progress, 5),
+                             border_radius=3)
 
     def set_position(self, new_position):
         self.__position = new_position
