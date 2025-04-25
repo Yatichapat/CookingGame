@@ -10,16 +10,9 @@ class Fridge:
     def __init__(self, x, y, chef):
         chef_x, chef_y = chef.get_position()
         self.__position = (x, y)
-        self.__ingredients = [
-            Ingredients(2, 10, "lamb"),
-            Ingredients(2, 4, "bread"),
-            Ingredients(2, 8, "leek"),
-            Ingredients(2, 6, "egg"),
-            Ingredients(4, 10, "chicken"),
-            Ingredients(2, 10, "lettuce"),
-            Ingredients(2, 10, "tomato"),
-            Ingredients(0,0, "cheese")
-        ]
+        self.__ingredients = {}
+        self.__selected_ingredient = None
+
         self.is_open = False
         self.__dropped_ingredients = []
         self.__select_index = 0
@@ -63,16 +56,22 @@ class Fridge:
         self.__ingredients.clear()
         self.__session_id = self.__get_next_session_id()
 
-        self.__ingredients = [
-            Ingredients(2, 10, "lamb"),
-            Ingredients(2, 4, "bread"),
-            Ingredients(2, 8, "leek"),
-            Ingredients(2, 6, "egg"),
-            Ingredients(4, 10, "chicken"),
-            Ingredients(2, 10, "lettuce"),
-            Ingredients(2, 10, "tomato"),
-            Ingredients(0, 0, "cheese")
+        ingredients_to_add = [
+            ("lamb", 1),
+            ("bread", 1),
+            ("leek", 1),
+            ("egg", 1),
+            ("chicken", 1),
+            ("lettuce", 1),
+            ("tomato", 1),
+            ("cheese", 1),
+            ("fish", 1),
+            ("pork", 1)
         ]
+
+        for ingredient_type, quantity in ingredients_to_add:
+            if quantity > 0:
+                self.__ingredients[ingredient_type] = quantity
 
     def toggle_fridge(self, chef):
         """Opens or closes the fridge."""
@@ -105,25 +104,42 @@ class Fridge:
     def pick_ingredient(self):
         """Returns the currently selected ingredient for pickup."""
         if self.is_open and self.__ingredients:
-            ingredient = self.__ingredients.pop(self.__select_index)
-            if self.__select_index >= len(self.__ingredients):
-                self.__select_index = len(self.__ingredients)
-            self.__record_usage(ingredient.get_type(), "Taken")
-            return ingredient
+            # Get a list of the ingredient types
+            ingredient_types = list(self.__ingredients.keys())
+
+            # Make sure the select index is valid
+            if self.__select_index >= len(ingredient_types):
+                self.__select_index = len(ingredient_types) - 1
+
+            # Get the ingredient type at the current selection
+            if self.__select_index >= 0 and self.__select_index < len(ingredient_types):
+                ingredient_type = ingredient_types[self.__select_index]
+
+                # Decrement the quantity
+                self.__ingredients[ingredient_type] -= 1
+
+                # If quantity reaches zero, remove the ingredient type
+                if self.__ingredients[ingredient_type] <= 0:
+                    del self.__ingredients[ingredient_type]
+
+                # Record usage and create a new ingredient to return
+                self.__record_usage(ingredient_type, "Taken")
+                return Ingredients(*self.__position, ingredient_type)
+
         return None
 
     def put_ingredient_in_fridge(self, ingredient):
-        """Puts the ingredient back into the fridge."""
-        items_per_row = 4
-        row = len(self.__ingredients) // items_per_row
-        col = len(self.__ingredients) % items_per_row
-        ingredient_x = 10 + (col * Config.get_config('GRID_SIZE_W') * 2.5)
-        ingredient_y = 10 + (row * Config.get_config('GRID_SIZE_H') * 1.5)
-
-        ingredient.set_position((ingredient_x, ingredient_y))
-        self.__ingredients.append(ingredient)
-
-        self.__record_usage(ingredient.get_type(), "Returned")
+        """Add ingredient to fridge with quantity tracking"""
+        ingredient_type = ingredient.get_type()
+        if ingredient_type in self.__ingredients:
+            # Increment quantity if ingredient already exists
+            self.__ingredients[ingredient_type] += 1
+        else:
+            # Add new ingredient with quantity 1
+            self.__ingredients[ingredient_type] = 1
+            # Set position to the corner of the screen
+            corner_position = (10, 10)  # Top-left corner with a small margin
+            ingredient.set_position(corner_position)
 
     def draw(self, screen):
         """Draws the fridge and its ingredients if open."""
@@ -133,24 +149,46 @@ class Fridge:
         screen.blit(fridge_image, (fridge_x, fridge_y))
 
         if self.is_open:
-            items_per_row = 4
-            for i, ingredient in enumerate(self.__ingredients):
-                row = i // items_per_row  # Determine the row number
-                col = i % items_per_row
-                ingredient_x = 10 + (col * Config.get_config('GRID_SIZE_W') * 2.5)
-                ingredient_y = 10 + (row * Config.get_config('GRID_SIZE_H') * 1.5)
-                ingredient.draw_at(screen, ingredient_x, ingredient_y)
+            # Start positions in the corner
+            x_start = 10  # Left margin
+            y_start = 10  # Top margin
 
+            x_offset = x_start
+            y_offset = y_start
+
+            # Maximum items per row
+            items_per_row = 4
+            item_count = 0
+
+            ingredient_types = list(self.__ingredients.keys())
+
+            for i, ingredient_type in enumerate(ingredient_types):
+                quantity = self.__ingredients[ingredient_type]
+
+                # Calculate position for current ingredient
+                current_x = x_start + (i % items_per_row) * 50
+                current_y = y_start + (i // items_per_row) * 50
+
+                # Create a temporary ingredient for display
+                example_ingredient = Ingredients(
+                    current_x, current_y, ingredient_type
+                )
+
+                # Draw the ingredient icon
+                example_ingredient.draw_at(screen, current_x, current_y)
+
+                # Draw quantity next to it
+                font = pg.font.SysFont('Arial', 18, bold=True)
+                quantity_text = font.render(f"x{quantity}", True, Config.get_config("BLACK"))
+                screen.blit(quantity_text, (current_x + 30, current_y + 5))
+
+                # Draw highlight rectangle for selected ingredient
                 if i == self.__select_index:
                     highlight_rect = pg.Rect(
-                        ingredient_x + 5, ingredient_y + 5,
+                        current_x, current_y,
                         Config.get_config('GRID_SIZE_W') + 15, Config.get_config('GRID_SIZE_W') + 15
                     )
                     pg.draw.rect(screen, (0, 0, 0), highlight_rect, 3)
-
-        for ingredient in self.__dropped_ingredients:
-            ingredient.draw_at(screen, ingredient.get_position()[0] * Config.get_config('GRID_SIZE_W'),
-                               ingredient.get_position()[1] * Config.get_config('GRID_SIZE_H'))
 
     def get_position(self):
         """Returns the position of the fridge."""
@@ -221,6 +259,12 @@ class Equipments:
                     newly_transformed = True
                 elif ingredient.get_type() == "chicken sliced" and elapsed_time >= 8:
                     transformed = Ingredients(*ingredient.get_position(), "chicken drumstick fried")
+                    newly_transformed = True
+                elif ingredient.get_type() == "fish" and elapsed_time >= 8:
+                    transformed = Ingredients(*ingredient.get_position(), "fish fried")
+                    newly_transformed = True
+                elif ingredient.get_type() == "pork" and elapsed_time >= 8:
+                    transformed = Ingredients(*ingredient.get_position(), "pork fried")
                     newly_transformed = True
 
                 # Play sound only if newly transformed and sound not played yet
@@ -313,7 +357,7 @@ class Equipments:
                 total_time = 0
                 if ingredient_type == "egg":
                     total_time = 0
-                elif ingredient_type in ["lamb", "chicken", "chicken sliced"]:
+                elif ingredient_type in ["lamb", "chicken", "chicken sliced", "fish", "pork"]:
                     total_time = 8
                 else:
                     continue

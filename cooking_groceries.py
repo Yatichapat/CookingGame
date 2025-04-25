@@ -46,7 +46,7 @@ class Groceries:
         self.__screen.blit(self.__button_img, self.button_rect)
 
     def generate_contents(self):
-        groceries = ["lamb", "bread", "egg", "chicken", "tomato", "lettuce", "cheese"]
+        groceries = ["lamb", "bread", "egg", "chicken", "tomato", "lettuce", "cheese", "pork", "fish"]
         return groceries
 
     def draw_bag(self):
@@ -86,9 +86,16 @@ class Groceries:
         if not self.__bag_carried or not self.__active_bag:
             return []
 
+        # Add each grocery item to the fridge
         for item in self.__active_bag['contents']:
-            # Add some randomness to spawn positions
+            # Create ingredient and add to fridge
             fridge.put_ingredient_in_fridge(Ingredients(0, 0, item))
+
+        # Play sound effect when adding to fridge
+        try:
+            Config.get_sound("fridge_door").play()
+        except:
+            pass  # If sound doesn't exist, ignore
 
         self.__bag_carried = False
         self.__active_bag = None

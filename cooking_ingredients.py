@@ -46,7 +46,8 @@ class Ingredients:
 
 
 class Menu:
-    __MENU_ITEMS = ["sandwich", "egg fried", "chicken fried", "lamb fried", "chicken drumstick fried"]
+    __MENU_ITEMS = ["sandwich", "egg fried", "chicken fried", "lamb fried", "chicken drumstick fried",
+                    "fish fried", "pork fried"]
 
     def __init__(self, max_orders=3):
         self.__font_menu = pg.font.Font(None, 14)

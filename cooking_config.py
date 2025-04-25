@@ -50,11 +50,20 @@ class Config:
             "egg fried": "images/simply cooked/Cooked food/egg1.png",
 
             "chicken": "images/simply cooked/Raw food/chiken3.png",
+            "chicken fried": "images/simply cooked/Cooked food/chiken1.png",
+
             "chicken to slice": "images/simply cooked/Raw food/chiken3.png",
             "chicken sliced": "images/simply cooked/Raw food/drumstick3.png",
+            "chicken rotten": "images/simply cooked/Rotten food/chiken_rotten.png",
 
-            "chicken fried": "images/simply cooked/Cooked food/chiken1.png",
             "chicken drumstick fried": "images/simply cooked/Cooked food/drumstick1.png",
+            "chicken drumstick rotten": "images/simply cooked/Rotten food/drumstick_rotten.png",
+
+            "pork": "images/simply cooked/Raw food/pork3.png",
+            "pork fried": "images/simply cooked/Cooked food/pork1.png",
+
+            "fish": "images/simply cooked/Raw food/fish3.png",
+            "fish fried": "images/simply cooked/Cooked food/fish1.png",
 
             "sandwich": "images/simply cooked/Cooked food/sandwich1.png",
             "tomato": "images/FarmVeggies/Tomato.png",
@@ -107,7 +116,7 @@ class Config:
                 sound = pg.mixer.Sound(path)
                 # Set the volume for the sound
                 if name == "game_start":
-                    sound.set_volume(0.2)
+                    sound.set_volume(0.3)
 
                 cls.__SOUND_CACHE[name] = sound
             except (FileNotFoundError, pg.error):
