@@ -109,6 +109,7 @@ class Config:
             "cutting": "sounds/cutting.mp3",
             "finish_cooking": "sounds/finishcooking.mp3",
             "served": "sounds/handbell.mp3",
+            "pan_cooking": "sounds/pan.mp3"
         }
 
         for name, path in sound_paths.items():

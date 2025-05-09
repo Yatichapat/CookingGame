@@ -4,7 +4,7 @@ import pygame as pg
 from cooking_config import Config
 from cooking_chef import Chef
 from cooking_zombie import Zombie
-from cooking_ingredients import *
+from cooking_menu import *
 from cooking_served import Serving
 from cooking_ui import *
 from cooking_tool import *
@@ -96,7 +96,17 @@ class GameApp:
                             self.__held_ingredient = None
 
                 elif event.key == pg.K_RETURN:
+                    # If chef gets attack, drop the ingredient
                     tool = self.is_near_tool()
+
+                    if tool is None:
+                        if self.__held_ingredient:
+                            self.drop_food_to_the_world()
+                        elif self.__held_plate:
+                            self.drop_all_to_the_world()
+                        elif self.__held_bag:
+                            self.__groceries.drop_bag(*self.__chef.get_position())
+                            self.__held_bag = False
 
                     # First try to pick up dropped items if not holding anything
                     if self.__held_ingredient is None and self.__held_plate is None:
@@ -162,6 +172,7 @@ class GameApp:
                             self.__held_plate = None
                         else:
                             self.drop_all_to_the_world()
+
                     # Handle held bag
                     elif self.__held_bag:
                         # Drop bag at current position
@@ -284,6 +295,12 @@ class GameApp:
 
         self.__chef.move()
         self.__zombie1.chase_player(self.__chef)
+        if self.__zombie1.attack(self.__chef):
+            if self.__held_ingredient:
+                self.drop_food_to_the_world()
+            if self.__held_plate:
+                self.drop_all_to_the_world()
+
         self.__pan.fry_ingredients()
         self.__menu.update()
         self.__kitchen_map.update()
@@ -300,6 +317,7 @@ class GameApp:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.__menu.save_to_order_per_session(force_save=True)
+                    self.__menu.save_to_time_per_dish()
                     pg.quit()
                     Config.get_sound("click").play()
                     exit()
@@ -313,6 +331,7 @@ class GameApp:
 
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
+                        self.__menu.save_to_time_per_dish()
                         self.__chef.save_keystrokes_to_csv()
                         self.restart_game()
                         return

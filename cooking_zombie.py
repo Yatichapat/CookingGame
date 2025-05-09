@@ -68,6 +68,8 @@ class Zombie:
             if self.zombie_rect.colliderect(player.get_rect()):
                 player.take_damage(10)
                 self.__last_attack_time = current_time
+                return True
+        return False
 
     def get_position(self):
         """Get the current position of the zombie"""

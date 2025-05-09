@@ -1,5 +1,6 @@
 from cooking_config import Config
-from cooking_ingredients import *
+from cooking_ingredients import Ingredients
+from cooking_menu import Menu
 import pygame as pg
 import os
 import csv
@@ -215,6 +216,11 @@ class Equipments:
         self.__ingredients = []
         self.__image_path = image_path
 
+        # Tracking cooking sound
+        self.__is_cooking = False
+        self.__cooking_sound_playing = False
+
+
     def clear(self):
         return self.__ingredients.clear()
 
@@ -229,17 +235,27 @@ class Equipments:
         current_time = pg.time.get_ticks()
         new_ingredients = []
 
+        # Check if there are ingredients being cooked
+        self.__is_cooking = any(
+            ingredient_data[0].get_type() in ["egg", "lamb", "chicken", "chicken sliced", "fish", "pork"]
+            for ingredient_data in self.__ingredients
+        )
+
+        # Handle cooking sound
+        if self.__is_cooking:
+            if not self.__cooking_sound_playing:
+                Config.get_sound('pan_cooking').play(-1)  # -1 for looping
+                self.__cooking_sound_playing = True
+        else:
+            if self.__cooking_sound_playing:
+                Config.get_sound('pan_cooking').stop()
+                self.__cooking_sound_playing = False
+
         for ingredient_data in self.__ingredients:
             # Safely unpack the data regardless of length
             ingredient = ingredient_data[0]
             start_time = ingredient_data[1]
-
-            # Add a sound_played flag if it doesn't exist
-            if len(ingredient_data) >= 3:
-                sound_played = ingredient_data[2]
-            else:
-                sound_played = False
-
+            sound_played = ingredient_data[2] if len(ingredient_data) >= 3 else False
             elapsed_time = (current_time - start_time) / 1000
             transformed = None
 
@@ -247,6 +263,7 @@ class Equipments:
             if isinstance(self, Pan):
                 # Check if this ingredient is newly transformed and needs sound
                 newly_transformed = False
+                self.__is_cooking = True
 
                 if ingredient.get_type() == "egg" and elapsed_time >= 0:
                     transformed = Ingredients(*ingredient.get_position(), "egg fried")
@@ -307,20 +324,19 @@ class Equipments:
             ingredient = item[0]  # Access the first element directly
             if "cooked" in ingredient.get_type() or "fried" in ingredient.get_type():
                 self.__ingredients.remove(item)  # Remove from the pan
+                # Check if no more ingredients are being cooked
+                if not any(
+                        i[0].get_type() in ["egg", "lamb", "chicken", "chicken sliced", "fish", "pork"]
+                        for i in self.__ingredients):
+                    self.__is_cooking = False
+                    if self.__cooking_sound_playing:
+                        Config.get_sound('pan_cooking').stop()
+                        self.__cooking_sound_playing = False
                 return ingredient  # Return only one ingredient
 
             if "sliced" in ingredient.get_type():
                 self.__ingredients.remove(item)  # Remove from the cutting board
                 return ingredient
-        return None
-
-    def get_sliced_ingredients(self):
-        sliced = []
-        for item in self.__ingredients[:]:
-            ingredient = item[0]  # Access the first element directly
-            if "sliced" in ingredient.get_type():
-                self.__ingredients.remove(item)  # Remove from the cutting board
-                return ingredient  # Return only one sliced ingredient
         return None
 
     def is_ready_to_pick(self):

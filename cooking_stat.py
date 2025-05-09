@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import numpy as np
 import os
+import seaborn as sns
 
 
 class StatsWindow:
@@ -362,7 +363,33 @@ class StatsWindow:
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Mistakes')
 
-        label = ttk.Label(tab, text="Mistakes during the game session", font=self.font_topic)
+        # Create a canvas and scrollbar for the entire tab
+        canvas = tk.Canvas(tab)
+        scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        # Configure the canvas
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Create window in canvas for the scrollable frame
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        # Bind the frame's configure event to update the scrollregion
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        label = ttk.Label(scrollable_frame, text="Mistakes during the game session", font=self.font_topic)
         label.pack(pady=20)
 
         try:
@@ -371,29 +398,105 @@ class StatsWindow:
             # Group by mistake type and count occurrences
             mistake_counts = df['mistake_type'].value_counts()
 
-            # Plot
-            fig, ax = plt.subplots(figsize=(8, 6))
+            # Create a frame for the plot to better control its size
+            plot_frame = ttk.Frame(scrollable_frame)
+            plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+            # Plot with adjusted size
+            fig, ax = plt.subplots(figsize=(8, 5))  # Slightly shorter height
             ax.bar(mistake_counts.index, mistake_counts.values, color='salmon', edgecolor='black')
 
-            ax.set_title('Mistakes Made')
+            ax.set_title('Mistakes Made', pad=15)
             ax.set_xlabel('Mistake Type')
             ax.set_ylabel('Count')
 
+            # Rotate x-axis labels if they're long
+            if any(len(str(x)) > 10 for x in mistake_counts.index):
+                plt.xticks(rotation=45, ha='right')
+
             # Show on Tkinter window
-            canvas = FigureCanvasTkAgg(fig, master=tab)
-            canvas.draw()
-            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+            canvas_plot = FigureCanvasTkAgg(fig, master=plot_frame)
+            canvas_plot.draw()
+            canvas_plot.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+            # ---- Table: Centered below the content ----
+            table_container = ttk.Frame(scrollable_frame)
+            table_container.pack(fill=tk.BOTH, expand=True, pady=(10, 20), padx=10)
+
+            # Add a label above the table
+            ttk.Label(table_container,
+                      text="Full Mistakes History",
+                      font=('Helvetica', 10, 'bold')).pack(pady=(10, 5))
+
+            # Create Treeview with its own frame for scrollbars
+            table_frame = ttk.Frame(table_container)
+            table_frame.pack(fill=tk.BOTH, expand=True)
+
+            # Create Treeview with adjusted height
+            tree = ttk.Treeview(table_frame, columns=list(df.columns), show='headings', height=8)
+
+            # Define column headers
+            for col in df.columns:
+                tree.heading(col, text=col)
+                tree.column(col, anchor=tk.CENTER, width=120)  # Slightly wider columns
+
+            # Insert rows into Treeview
+            for _, row in df.iterrows():
+                tree.insert("", tk.END, values=list(row))
+
+            # Scrollbars for the Treeview
+            vsb_tree = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+            hsb_tree = ttk.Scrollbar(table_frame, orient="horizontal", command=tree.xview)
+            tree.configure(yscrollcommand=vsb_tree.set, xscrollcommand=hsb_tree.set)
+
+            # Grid layout for better control
+            tree.grid(row=0, column=0, sticky="nsew")
+            vsb_tree.grid(row=0, column=1, sticky="ns")
+            hsb_tree.grid(row=1, column=0, sticky="ew")
+            table_frame.grid_rowconfigure(0, weight=1)
+            table_frame.grid_columnconfigure(0, weight=1)
+
+            # Add some padding at the bottom to ensure everything is visible
+            ttk.Frame(scrollable_frame, height=10).pack()
 
         except FileNotFoundError:
-            ttk.Label(tab, text="Error: File 'mistake.csv' not found.").pack(pady=10)
+            ttk.Label(scrollable_frame, text="Error: File 'mistake.csv' not found.").pack(pady=10)
         except Exception as e:
-            ttk.Label(tab, text=f"Error: {str(e)}").pack(pady=10)
+            ttk.Label(scrollable_frame, text=f"Error: {str(e)}").pack(pady=10)
 
     def create_ingredients_used_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Ingredients Used')
 
-        label = ttk.Label(tab, text="Ingredients Taken Summary", font=self.font_topic)
+        # Create a canvas and scrollbar for the entire tab
+        canvas = tk.Canvas(tab)
+        scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        # Configure the canvas
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Create window in canvas for the scrollable frame
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        # Bind the frame's configure event to update the scrollregion
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        # Bind mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        # Now put all your content inside scrollable_frame instead of tab
+        label = ttk.Label(scrollable_frame, text="Ingredients Taken Summary", font=self.font_topic)
         label.pack(pady=10)
 
         try:
@@ -406,45 +509,60 @@ class StatsWindow:
             total_taken = taken_df.groupby('ingredient')['quantity'].sum()
 
             if total_taken.empty:
-                ttk.Label(tab, text="No 'Taken' data to show.").pack(pady=10)
+                ttk.Label(scrollable_frame, text="No 'Taken' data to show.").pack(pady=10)
                 return
 
             # Layout frame: pie chart on left, distribution on right
-            content_frame = ttk.Frame(tab)
+            content_frame = ttk.Frame(scrollable_frame)
             content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
             # ---- Left: Pie Chart with Pastel Colors ----
-            fig, ax = plt.subplots(figsize=(5, 5))
+            pie_frame = ttk.Frame(content_frame)
+            pie_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            fig, ax = plt.subplots(figsize=(6, 6))  # Increased figure size
 
             # Define pastel colors using the Pastel1 colormap
-            pastel_cmap = plt.get_cmap("Pastel1")
-            colors = pastel_cmap(np.linspace(0, 1, len(total_taken)))
+            colors = sns.color_palette("pastel", n_colors=len(total_taken))
 
             ax.pie(
                 total_taken.values,
                 labels=total_taken.index,
                 autopct='%1.1f%%',
                 startangle=90,
-                textprops={'fontsize': 9},
-                colors=colors
+                textprops={'fontsize': 10},  # Increased font size
+                colors=colors,
+                wedgeprops={'linewidth': 1, 'edgecolor': 'white'}  # Better visual separation
             )
-            ax.set_title('Ingredients Taken', fontsize=12)
+            ax.set_title('Ingredients Taken', fontsize=12, pad=20)
 
-            canvas = FigureCanvasTkAgg(fig, master=content_frame)
-            canvas.draw()
-            canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            canvas_pie = FigureCanvasTkAgg(fig, master=pie_frame)
+            canvas_pie.draw()
+            canvas_pie.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
             # ---- Right: Distribution Text ----
             dist_frame = ttk.Frame(content_frame)
-            dist_frame.pack(side=tk.LEFT, fill=tk.Y, padx=20)
+            dist_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=20)
 
-            ttk.Label(dist_frame, text="Quantity Taken per Ingredient", font=('Helvetica', 10, 'bold')).pack(anchor='w')
+            ttk.Label(dist_frame, text="Quantity Taken per Ingredient",
+                      font=('Helvetica', 10, 'bold')).pack(anchor='w', pady=(0, 5))
 
-            text_widget = tk.Text(dist_frame, height=15, width=30, font=('Courier', 10))
-            text_widget.pack(pady=5)
+            # Use a Frame to contain the text widget and its scrollbar
+            text_container = ttk.Frame(dist_frame)
+            text_container.pack(fill=tk.BOTH, expand=True)
+
+            text_widget = tk.Text(text_container, height=15, width=30,
+                                  font=('Courier', 10), wrap=tk.NONE)
+            vsb_text = ttk.Scrollbar(text_container, orient="vertical", command=text_widget.yview)
+            hsb_text = ttk.Scrollbar(text_container, orient="horizontal", command=text_widget.xview)
+            text_widget.configure(yscrollcommand=vsb_text.set, xscrollcommand=hsb_text.set)
+
+            vsb_text.pack(side=tk.RIGHT, fill=tk.Y)
+            hsb_text.pack(side=tk.BOTTOM, fill=tk.X)
+            text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
             for ingredient, qty in total_taken.items():
-                text_widget.insert(tk.END, f"{ingredient:<15} {qty}\n")
+                text_widget.insert(tk.END, f"{ingredient:<20} {qty:>10}\n")  # Better alignment
 
             text_widget.config(state=tk.DISABLED)
 
@@ -453,19 +571,62 @@ class StatsWindow:
             min_ingredient = total_taken.idxmin()
             min_qty = total_taken.min()
 
-            summary_label = ttk.Label(
-                dist_frame,
-                text=f"Most Taken:      {max_ingredient}    ({max_qty})\n\n"
-                     f"Least Taken:     {min_ingredient}    ({min_qty})",
+            summary_frame = ttk.Frame(dist_frame)
+            summary_frame.pack(fill=tk.X, pady=(10, 5))
+
+            ttk.Label(
+                summary_frame,
+                text=f"Most Taken: {max_ingredient} ({max_qty})",
                 font=('Helvetica', 10, 'bold'),
-            )
-            summary_label.pack(anchor='w', pady=(10, 5))
+            ).pack(anchor='w')
+
+            ttk.Label(
+                summary_frame,
+                text=f"Least Taken: {min_ingredient} ({min_qty})",
+                font=('Helvetica', 10, 'bold'),
+            ).pack(anchor='w')
+
+            # ---- Table: Centered below the content ----
+            table_container = ttk.Frame(scrollable_frame)
+            table_container.pack(fill=tk.BOTH, expand=True, pady=(20, 10))
+
+            # Add a label above the table
+            ttk.Label(table_container,
+                      text="Full Ingredient Usage History",
+                      font=('Helvetica', 10, 'bold')).pack(pady=(10, 5))
+
+            # Create Treeview with its own frame for scrollbars
+            table_frame = ttk.Frame(table_container)
+            table_frame.pack(fill=tk.BOTH, expand=True)
+
+            # Create Treeview with adjusted height
+            tree = ttk.Treeview(table_frame, columns=list(df.columns), show='headings', height=8)
+
+            # Define column headers
+            for col in df.columns:
+                tree.heading(col, text=col)
+                tree.column(col, anchor=tk.CENTER, width=100)  # Set minimum width
+
+            # Insert rows into Treeview
+            for _, row in df.iterrows():
+                tree.insert("", tk.END, values=list(row))
+
+            # Scrollbars for the Treeview
+            vsb_tree = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+            hsb_tree = ttk.Scrollbar(table_frame, orient="horizontal", command=tree.xview)
+            tree.configure(yscrollcommand=vsb_tree.set, xscrollcommand=hsb_tree.set)
+
+            # Grid layout for better control
+            tree.grid(row=0, column=0, sticky="nsew")
+            vsb_tree.grid(row=0, column=1, sticky="ns")
+            hsb_tree.grid(row=1, column=0, sticky="ew")
+            table_frame.grid_rowconfigure(0, weight=1)
+            table_frame.grid_columnconfigure(0, weight=1)
 
         except FileNotFoundError:
-            ttk.Label(tab, text="Error: File 'ingredient_used.csv' not found.").pack(pady=10)
+            ttk.Label(scrollable_frame, text="Error: File 'ingredient_used.csv' not found.").pack(pady=10)
         except Exception as e:
-            ttk.Label(tab, text=f"Error: {str(e)}").pack(pady=10)
-
+            ttk.Label(scrollable_frame, text=f"Error: {str(e)}").pack(pady=10)
     def create_total_time_per_dish_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Total Time per Dish')
