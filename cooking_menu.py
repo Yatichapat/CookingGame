@@ -12,6 +12,8 @@ class Menu:
     __MENU_ITEMS = ["sandwich", "egg fried", "chicken fried", "lamb fried", "chicken drumstick fried",
                     "fish fried", "pork fried"]
 
+    __next_session_id = 1
+
     def __init__(self, max_orders=3):
         self.__font_menu = pg.font.Font(None, 14)
         self.__font_score = pg.font.Font(None, 42)
@@ -34,6 +36,11 @@ class Menu:
         self.__images = {
             item: pg.transform.scale(Config.get_image(item), (90, 90)) for item in self.__MENU_ITEMS
         }
+
+        # Session tracking
+        Menu.__next_session_id += 1
+        self.__session_id = Menu.__next_session_id
+        self.__session_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def log_mistake(self, mistake_type="unknown", extra_info=None):
         self.__current_mistakes += 1
@@ -100,8 +107,9 @@ class Menu:
         self.__score = 0
         self.__menu_appearance = {item: 0 for item in self.__MENU_ITEMS}
         self.__successful_orders = {item: 0 for item in self.__MENU_ITEMS}
+        self.__session_id += 1
         self.__session_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.__dish_preparation_times = []  # Clear time tracking
+        self.__dish_preparation_times = []
 
         self.__current_mistakes = 0
         self.__detailed_mistakes = []
@@ -244,14 +252,11 @@ class Menu:
                 if not file_exist:
                     writer.writeheader()
 
-                # Generate a session ID for grouping
-                session_id = self.__session_start_time.replace(" ", "_").replace(":", "-")
-
                 # Write all tracked preparation times to the CSV
                 for record in self.__dish_preparation_times:
                     data = {
                         'timestamp': record['timestamp'],
-                        'session_id': session_id,
+                        'session_id': self.__session_id,
                         'dish_type': record['dish_type'],
                         'preparation_time_seconds': record['preparation_time_seconds']
                     }

@@ -1,1 +1,13 @@
 timestamp,session_id,dish_type,preparation_time_seconds
+2025-05-09 14:15:43,1,egg fried,7.347
+2025-05-09 14:16:02,1,lamb fried,26.791
+2025-05-09 14:18:12,2,egg fried,6.151
+2025-05-09 14:18:36,2,fish fried,27.803
+2025-05-09 14:18:40,2,pork fried,27.295
+2025-05-09 14:36:29,3,lamb fried,17.134
+2025-05-09 14:44:28,3,fish fried,20.961
+2025-05-09 14:44:32,3,pork fried,24.556
+2025-05-09 14:44:48,3,chicken drumstick fried,40.284
+2025-05-09 14:45:00,3,egg fried,10.244
+2025-05-09 14:46:35,4,egg fried,6.139
+2025-05-09 14:46:57,4,chicken drumstick fried,28.302

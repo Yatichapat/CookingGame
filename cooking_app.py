@@ -342,6 +342,7 @@ class GameApp:
 
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
+                        self.__menu.save_to_time_per_dish()
                         self.__chef.save_keystrokes_to_csv()
                         pg.quit()
                         exit()
@@ -379,6 +380,7 @@ class GameApp:
 
                         # Only save when game is exiting
                         self.__menu.save_to_order_per_session(force_save=True)
+                        self.__menu.save_to_time_per_dish()
                         self.__chef.save_keystrokes_to_csv()
                         self.__start_game = False
                         GameUI.game_over = False
