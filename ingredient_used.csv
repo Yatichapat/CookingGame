@@ -445,3 +445,12 @@ session_id, id, timestamp, ingredient, action, quantity
 97,4,2025-05-09 14:44:54,egg,Taken,1
 98,1,2025-05-09 14:46:31,egg,Taken,1
 98,2,2025-05-09 14:46:41,chicken,Taken,1
+99,1,2025-05-09 22:17:19,pork,Taken,1
+99,2,2025-05-09 22:17:27,chicken,Taken,1
+100,1,2025-05-09 22:30:24,fish,Taken,1
+100,2,2025-05-09 22:30:29,chicken,Taken,1
+100,3,2025-05-09 22:30:39,pork,Taken,1
+101,1,2025-05-09 22:41:52,bread,Taken,1
+101,2,2025-05-09 22:42:00,lettuce,Taken,1
+101,3,2025-05-09 22:42:06,tomato,Taken,1
+101,4,2025-05-09 22:42:12,cheese,Taken,1

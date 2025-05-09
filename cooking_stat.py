@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import os
@@ -189,20 +190,22 @@ class StatsWindow:
                       foreground="red",
                       wraplength=800).pack()
 
-        # Configure scrolling
-        def on_configure(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-            canvas.itemconfig(1, width=event.width)
+            # Update scroll region
+            def on_configure(event):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+                canvas.itemconfig(1, width=event.width)
 
-        content_frame.bind("<Configure>", on_configure)
+            content_frame.bind("<Configure>", on_configure)
 
-        # Mousewheel scrolling
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-        canvas.bind("<MouseWheel>", _on_mousewheel)
+            def bind_mousewheel(widget):
+                widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+                widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
 
-        content_frame.bind("MouseWheel>", _on_mousewheel)
+            bind_mousewheel(content_frame)
+            bind_mousewheel(chart_canvas.get_tk_widget())
 
     def load_stats(self):
         # Placeholder for loading stats logic
@@ -292,6 +295,27 @@ class StatsWindow:
         chart_canvas.draw()
         chart_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+        # --- Table Section ---
+        table_container = ttk.Frame(scrollable_frame)
+        table_container.pack(fill=tk.BOTH, expand=True, pady=(10, 20), padx=10)
+
+        ttk.Label(table_container, text="Full Order Complete History", font=('Helvetica', 10, 'bold')).pack(
+            pady=(10, 5))
+
+        table_frame = ttk.Frame(table_container)
+        table_frame.pack(fill=tk.BOTH, expand=True)
+
+        tree = ttk.Treeview(table_frame, columns=list(df.columns), show='headings', height=8)
+
+        for col in df.columns:
+            tree.heading(col, text=col)
+            tree.column(col, anchor=tk.CENTER, width=120)
+
+        for _, row in df.iterrows():
+            tree.insert("", tk.END, values=list(row))
+
+        tree.pack(fill=tk.BOTH, expand=True)
+
         # Update scroll region
         def on_configure(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
@@ -303,61 +327,129 @@ class StatsWindow:
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        def bind_mousewheel(widget):
+            widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+            widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        bind_mousewheel(scrollable_frame)
+        bind_mousewheel(chart_canvas.get_tk_widget())
 
     def create_order_per_dish_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Order Analysis')
 
-        label = ttk.Label(tab, text="Order Patterns Across Sessions", font=self.font_topic)
+        # Configure grid to expand
+        tab.rowconfigure(0, weight=1)
+        tab.columnconfigure(0, weight=1)
+
+        # Main scrollable frame
+        main_frame = ttk.Frame(tab)
+        main_frame.grid(row=0, column=0, sticky="nsew")
+
+        canvas = tk.Canvas(main_frame)
+        canvas.grid(row=0, column=0, sticky="nsew")
+
+        scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=canvas.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        main_frame.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollable_frame = ttk.Frame(canvas)
+        window_id = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        # Update scrollregion and stretch canvas width
+        def on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            canvas.itemconfig(window_id, width=canvas.winfo_width())
+
+        scrollable_frame.bind("<Configure>", on_configure)
+
+        # Mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        # Universal mousewheel binding for scrollable_frame
+        def bind_mousewheel(widget):
+            widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+            widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        # --- Content begins here ---
+        label = ttk.Label(scrollable_frame, text="Order Patterns Across Sessions", font=self.font_topic)
         label.pack(pady=20)
 
         # Load CSV
         df = pd.read_csv('order_per_session.csv', skipinitialspace=True, on_bad_lines='skip')
 
-        # Convert timestamps to datetime and calculate session duration
+        # Convert timestamps
         df['session_start'] = pd.to_datetime(df['session_start'])
         df['session_end'] = pd.to_datetime(df['session_end'])
         df['duration_sec'] = (df['session_end'] - df['session_start']).dt.total_seconds()
 
         dish_columns = ['sandwich', 'egg fried', 'chicken fried', 'lamb fried', 'chicken drumpstick fried']
 
-        # Create scatter plot
+        # Plot
         fig, ax = plt.subplots(figsize=(10, 6))
-
-        # Plot each dish type with different markers
-        markers = ['o', 's', 'D', '^', 'v']  # Circle, square, diamond, triangle up/down
+        markers = ['o', 's', 'D', '^', 'v']
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
 
         for i, dish in enumerate(dish_columns):
             ax.scatter(
                 x=df['duration_sec'],
-                y=df[dish] * df['total_score'],  # Weight orders by score
+                y=df[dish] * df['total_score'],
                 label=dish.title(),
                 marker=markers[i],
                 color=colors[i],
-                s=100,  # Marker size
+                s=100,
                 alpha=0.7,
                 edgecolors='w'
             )
+            z = np.polyfit(df['duration_sec'], df[dish] * df['total_score'], 1)
+            p = np.poly1d(z)
+            ax.plot(df['duration_sec'], p(df['duration_sec']), '--', alpha=0.3)
 
-        # Customize plot
         ax.set_title('Order Patterns by Session Duration', pad=20)
         ax.set_xlabel('Session Duration (seconds)')
         ax.set_ylabel('Order Value (Count × Score)')
         ax.grid(True, linestyle=':', alpha=0.3)
         ax.legend(title="Dish Types")
 
-        # Add trendlines
-        for dish in dish_columns:
-            z = np.polyfit(df['duration_sec'], df[dish] * df['total_score'], 1)
-            p = np.poly1d(z)
-            ax.plot(df['duration_sec'], p(df['duration_sec']), '--', alpha=0.3)
+        # Embed plot
+        canvas_plot = FigureCanvasTkAgg(fig, master=scrollable_frame)
+        canvas_plot.draw()
+        canvas_plot.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        # Show in Tkinter
-        canvas = FigureCanvasTkAgg(fig, master=tab)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        # --- Table Section ---
+        table_container = ttk.Frame(scrollable_frame)
+        table_container.pack(fill=tk.BOTH, expand=True, pady=(10, 20), padx=10)
+
+        ttk.Label(table_container, text="Full Order Complete History", font=('Helvetica', 10, 'bold')).pack(
+            pady=(10, 5))
+
+        table_frame = ttk.Frame(table_container)
+        table_frame.pack(fill=tk.BOTH, expand=True)
+
+        tree = ttk.Treeview(table_frame, columns=list(df.columns), show='headings', height=8)
+
+        for col in df.columns:
+            tree.heading(col, text=col)
+            tree.column(col, anchor=tk.CENTER, width=120)
+
+        for _, row in df.iterrows():
+            tree.insert("", tk.END, values=list(row))
+
+        tree.pack(fill=tk.BOTH, expand=True)
+
+        # Universal mousewheel binding for scrollable_frame
+        def bind_mousewheel(widget):
+            widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+            widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        bind_mousewheel(scrollable_frame)
+        bind_mousewheel(canvas_plot.get_tk_widget())
+        bind_mousewheel(table_frame)
 
     def create_mistake_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
@@ -374,7 +466,7 @@ class StatsWindow:
         scrollbar.pack(side="right", fill="y")
 
         # Create window in canvas for the scrollable frame
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        window_id = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
         # Bind the frame's configure event to update the scrollregion
         scrollable_frame.bind(
@@ -384,10 +476,12 @@ class StatsWindow:
             )
         )
 
+        # Mousewheel scrolling
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
 
         label = ttk.Label(scrollable_frame, text="Mistakes during the game session", font=self.font_topic)
         label.pack(pady=20)
@@ -459,6 +553,24 @@ class StatsWindow:
             # Add some padding at the bottom to ensure everything is visible
             ttk.Frame(scrollable_frame, height=10).pack()
 
+            # Update scroll region
+            def on_configure(event):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+                canvas.itemconfig(window_id, width=canvas.winfo_width())
+
+            scrollable_frame.bind("<Configure>", on_configure)
+
+            # Mousewheel scrolling
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+            def bind_mousewheel(widget):
+                widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+                widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+            bind_mousewheel(scrollable_frame)
+            bind_mousewheel(canvas_plot.get_tk_widget())
+
         except FileNotFoundError:
             ttk.Label(scrollable_frame, text="Error: File 'mistake.csv' not found.").pack(pady=10)
         except Exception as e:
@@ -479,21 +591,7 @@ class StatsWindow:
         scrollbar.pack(side="right", fill="y")
 
         # Create window in canvas for the scrollable frame
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-
-        # Bind the frame's configure event to update the scrollregion
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-
-        # Bind mouse wheel scrolling
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        window_id = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
         # Now put all your content inside scrollable_frame instead of tab
         label = ttk.Label(scrollable_frame, text="Ingredients Taken Summary", font=self.font_topic)
@@ -623,16 +721,161 @@ class StatsWindow:
             table_frame.grid_rowconfigure(0, weight=1)
             table_frame.grid_columnconfigure(0, weight=1)
 
+            # In on_configure
+            def on_configure(event):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+                canvas.itemconfig(window_id, width=canvas.winfo_width())
+
+            scrollable_frame.bind("<Configure>", on_configure)
+
+            # Mousewheel scrolling
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+            def bind_mousewheel(widget):
+                widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+                widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+            bind_mousewheel(scrollable_frame)
+            bind_mousewheel(canvas_pie.get_tk_widget())
+
         except FileNotFoundError:
             ttk.Label(scrollable_frame, text="Error: File 'ingredient_used.csv' not found.").pack(pady=10)
         except Exception as e:
             ttk.Label(scrollable_frame, text=f"Error: {str(e)}").pack(pady=10)
+
     def create_total_time_per_dish_tab(self, tab_control):
         tab = ttk.Frame(tab_control)
-        tab_control.add(tab, text='Total Time per Dish')
+        tab_control.add(tab, text='Time per Dish')
 
-        label = ttk.Label(tab, text="Total Time per Dish Statistics", font=self.font_topic)
-        label.pack(pady=20)
+        tab.rowconfigure(0, weight=1)
+        tab.columnconfigure(0, weight=1)
+
+        main_frame = ttk.Frame(tab)
+        main_frame.grid(row=0, column=0, sticky="nsew")
+
+        main_frame.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+
+        canvas = tk.Canvas(main_frame)
+        canvas.grid(row=0, column=0, sticky="nsew")
+
+        scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=canvas.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        content_frame = ttk.Frame(canvas)
+        window_id = canvas.create_window((0, 0), window=content_frame, anchor="nw")
+
+        ttk.Label(content_frame,
+                  text="Dish Preparation Time Analysis",
+                  font=("Arial", 16, "bold")).pack(pady=20)
+
+        try:
+            df = pd.read_csv("total_time_per_dish.csv")
+
+            if df.empty:
+                ttk.Label(content_frame, text="No preparation time data available").pack()
+                return
+
+            # ---------- CALCULATE STATISTICS ----------
+            stats = df.groupby('dish_type')['preparation_time_seconds'].agg(
+                ['count', 'mean', 'median', 'min', 'max', 'std']
+            ).reset_index()
+
+            stats.columns = [
+                'Dish Type', 'Count', 'Mean (s)', 'Median (s)',
+                'Min (s)', 'Max (s)', 'Std Dev'
+            ]
+
+            stats['Mean (s)'] = stats['Mean (s)'].round(1)
+            stats['Median (s)'] = stats['Median (s)'].round(1)
+            stats['Std Dev'] = stats['Std Dev'].round(1)
+
+            # ---------- CREATE BOX PLOT ----------
+            fig, ax = plt.subplots(figsize=(6, 5))
+            sns.boxplot(data=df, x='dish_type', y='preparation_time_seconds',
+                        ax=ax, palette="husl")
+            ax.set_title('Preparation Time Range by Dish Type')
+            ax.set_xlabel('')
+            ax.set_ylabel('Time (seconds)')
+            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+
+            # ========== Plot + Summary Table in One Horizontal Frame ==========
+            viz_summary_frame = ttk.Frame(content_frame)
+            viz_summary_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 10))
+
+            # Left: Boxplot
+            plot_canvas = FigureCanvasTkAgg(fig, master=viz_summary_frame)
+            plot_canvas.draw()
+            plot_widget = plot_canvas.get_tk_widget()
+            plot_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            # Right: Summary Table
+            summary_table_frame = ttk.Frame(viz_summary_frame)
+            summary_table_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(10, 0))
+
+            summary_table = ttk.Treeview(summary_table_frame, show='headings', height=4)
+            summary_table['columns'] = ['Metric', 'Value']
+
+            for col in ['Metric', 'Value']:
+                summary_table.heading(col, text=col)
+                summary_table.column(col, anchor=tk.CENTER, width=150)
+
+            fastest_dish = stats.loc[stats['Mean (s)'].idxmin()]
+            slowest_dish = stats.loc[stats['Mean (s)'].idxmax()]
+            total_dishes = stats['Count'].sum()
+
+            summary_table.insert('', 'end',
+                                 values=["Fastest Dish", f"{fastest_dish['Dish Type']} ({fastest_dish['Mean (s)']}s)"])
+            summary_table.insert('', 'end',
+                                 values=["Slowest Dish", f"{slowest_dish['Dish Type']} ({slowest_dish['Mean (s)']}s)"])
+            summary_table.insert('', 'end', values=["Total Dishes Prepared", total_dishes])
+
+            summary_table.pack()
+
+            # ========== STATISTICS TABLE SECTION ==========
+            stats_frame = ttk.Frame(content_frame)
+            stats_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+
+            table = ttk.Treeview(stats_frame)
+            table['columns'] = list(stats.columns)
+            table.column("#0", width=0, stretch=tk.NO)
+
+            for col in stats.columns:
+                table.column(col, anchor=tk.CENTER, width=100)
+                table.heading(col, text=col, anchor=tk.CENTER)
+
+            for _, row in stats.iterrows():
+                table.insert("", tk.END, values=list(row))
+
+            vsb = ttk.Scrollbar(stats_frame, orient="vertical", command=table.yview)
+            hsb = ttk.Scrollbar(stats_frame, orient="horizontal", command=table.xview)
+            table.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+
+            table.grid(row=0, column=0, sticky="nsew")
+            vsb.grid(row=0, column=1, sticky="ns")
+            hsb.grid(row=1, column=0, sticky="ew")
+            stats_frame.grid_rowconfigure(0, weight=1)
+            stats_frame.grid_columnconfigure(0, weight=1)
+
+            # Update scroll region
+            def on_configure(event):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+                canvas.itemconfig(window_id, width=canvas.winfo_width())
+
+            content_frame.bind("<Configure>", on_configure)
+
+            # Mousewheel scrolling
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        except Exception as e:
+            ttk.Label(content_frame, text=f"Error loading data: {str(e)}").pack()
 
 
 if __name__ == "__main__":

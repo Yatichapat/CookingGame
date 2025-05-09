@@ -11,3 +11,6 @@ timestamp,session_id,dish_type,preparation_time_seconds
 2025-05-09 14:45:00,3,egg fried,10.244
 2025-05-09 14:46:35,4,egg fried,6.139
 2025-05-09 14:46:57,4,chicken drumstick fried,28.302
+2025-05-09 22:30:45,4,fish fried,23.521
+2025-05-09 22:30:50,4,chicken fried,28.199
+2025-05-09 22:42:22,5,sandwich,32.192
