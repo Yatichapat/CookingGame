@@ -286,8 +286,6 @@ class StatsWindow:
         ax3.set_xlabel('Dish ID')
         ax3.set_ylabel('Keystroke Count')
         ax3.set_title('Keystroke Trends by Direction')
-        ax3.set_xticks(x)
-        ax3.set_xticklabels(df['id'].astype(str), rotation=90)
         ax3.legend()
         ax3.grid(True, linestyle='--', alpha=0.6)
 
