@@ -1,15 +1,11 @@
-import time
-
-import pygame as pg
-from cooking_config import Config
-from cooking_chef import Chef
-from cooking_zombie import Zombie
-from cooking_menu import *
-from cooking_served import Serving
-from cooking_ui import *
-from cooking_tool import *
-from cooking_groceries import Groceries
-from cooking_stat import StatsWindow
+from file_game.cooking_chef import Chef
+from file_game.cooking_zombie import Zombie
+from file_game.cooking_menu import *
+from file_game.cooking_served import Serving
+from file_game.cooking_ui import *
+from file_game.cooking_tool import *
+from file_game.cooking_groceries import Groceries
+from file_game.cooking_stat import StatsWindow
 
 
 class GameApp:

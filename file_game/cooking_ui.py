@@ -1,4 +1,4 @@
-from cooking_config import *
+from file_game.cooking_config import *
 
 
 class KitchenMap:

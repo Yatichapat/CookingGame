@@ -3,8 +3,8 @@ import time
 import csv
 import os
 import pygame as pg
-from cooking_config import Config
-from cooking_ui import GameUI
+from file_game.cooking_config import Config
+from file_game.cooking_ui import GameUI
 
 
 class Chef:

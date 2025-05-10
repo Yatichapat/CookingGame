@@ -14,3 +14,5 @@ timestamp,session_id,dish_type,preparation_time_seconds
 2025-05-09 22:30:45,4,fish fried,23.521
 2025-05-09 22:30:50,4,chicken fried,28.199
 2025-05-09 22:42:22,5,sandwich,32.192
+2025-05-10 15:08:15,6,fish fried,25.634
+2025-05-10 15:08:19,6,chicken fried,27.961

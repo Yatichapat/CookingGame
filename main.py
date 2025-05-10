@@ -1,4 +1,4 @@
-from cooking_app import *
+from file_game.cooking_app import *
 
 if __name__ == '__main__':
     app = GameApp()

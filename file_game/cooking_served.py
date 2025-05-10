@@ -1,5 +1,5 @@
 import pygame as pg
-from cooking_config import *
+from file_game.cooking_config import *
 import math
 
 

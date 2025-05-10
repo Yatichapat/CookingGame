@@ -1,7 +1,6 @@
 import pygame as pg
-import random
-from cooking_config import Config
-from cooking_ingredients import Ingredients
+from file_game.cooking_config import Config
+from file_game.cooking_ingredients import Ingredients
 
 
 class Groceries:

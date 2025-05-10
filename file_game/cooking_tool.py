@@ -1,6 +1,6 @@
-from cooking_config import Config
-from cooking_ingredients import Ingredients
-from cooking_menu import Menu
+from file_game.cooking_config import Config
+from file_game.cooking_ingredients import Ingredients
+from file_game.cooking_menu import Menu
 import pygame as pg
 import os
 import csv

@@ -1,5 +1,5 @@
 import pygame as pg
-from cooking_config import Config
+from file_game.cooking_config import Config
 import random
 
 

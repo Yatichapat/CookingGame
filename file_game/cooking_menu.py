@@ -1,6 +1,6 @@
 import os
-from cooking_config import Config
-from cooking_ui import GameUI
+from file_game.cooking_config import Config
+from file_game.cooking_ui import GameUI
 import pygame as pg
 import random
 from collections import deque

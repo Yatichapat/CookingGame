@@ -1,16 +1,5 @@
 # Apocalypse Cooker
 
-## Description
-Apocalypse Cooker is a cooking game with an apocalypse theme, where the chef opens the restaurant to send food to the 
-survivors of a zombie horde in the quarantine zone around the city. The chef, who is a player, must avoid poisonous food 
-that will randomly spawn when those ingredients are sent from outside. They may get infected, radiated, or expired. So 
-we must try to avoid them as much as possible.
-
-## Features
-- **Cooking**: Players can cook various dishes using different ingredients.
-- **Ingredient Management**: Players can manage their ingredients, including adding, removing, and checking the status of ingredients.
-- **Cooking Process**: Players can follow a cooking process to create dishes, cutting, and cooking.
-
 ## 🚀Getting Started
 ### 1.  Clone the repository
 ```bash 

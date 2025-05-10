@@ -473,3 +473,9 @@ session_id, id, timestamp, ingredient, action, quantity
 113,1,2025-05-10 10:54:32,lamb,Taken,1
 114,1,2025-05-10 11:03:27,lamb,Taken,1
 115,1,2025-05-10 11:58:52,egg,Taken,1
+116,1,2025-05-10 14:14:30,pork,Taken,1
+116,2,2025-05-10 14:14:37,chicken,Taken,1
+116,3,2025-05-10 14:14:52,bread,Taken,1
+117,1,2025-05-10 15:07:53,bread,Taken,1
+117,2,2025-05-10 15:07:56,fish,Taken,1
+117,3,2025-05-10 15:08:01,chicken,Taken,1
