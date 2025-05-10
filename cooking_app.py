@@ -99,15 +99,6 @@ class GameApp:
                     # If chef gets attack, drop the ingredient
                     tool = self.is_near_tool()
 
-                    if tool is None:
-                        if self.__held_ingredient:
-                            self.drop_food_to_the_world()
-                        elif self.__held_plate:
-                            self.drop_all_to_the_world()
-                        elif self.__held_bag:
-                            self.__groceries.drop_bag(*self.__chef.get_position())
-                            self.__held_bag = False
-
                     # First try to pick up dropped items if not holding anything
                     if self.__held_ingredient is None and self.__held_plate is None:
                         # Try to pick up dropped plate first (since it might contain ingredients)
@@ -170,8 +161,6 @@ class GameApp:
                                 self.__serving.serve()
                         elif tool == 'trash':
                             self.__held_plate = None
-                        else:
-                            self.drop_all_to_the_world()
 
                     # Handle held bag
                     elif self.__held_bag:
@@ -195,15 +184,18 @@ class GameApp:
                                 self.__plate_pick = False
 
                         if tool == 'paper bag':
-                            if self.__held_bag:
-                                # Drop the bag
-                                self.__groceries.drop_bag(*self.__chef.get_position())
-                                self.__held_bag = False
-
-                            else:
-                                # Try to pick up bag
+                            if not self.__held_bag:
                                 if self.__groceries.pick_up_bag(self.__chef.get_position()):
                                     self.__held_bag = True
+
+                elif event.key == pg.K_LSHIFT or event.key == pg.K_RSHIFT:
+                    if self.__held_ingredient:
+                        self.drop_food_to_the_world()
+                    elif self.__held_plate:
+                        self.drop_all_to_the_world()
+                    elif self.__held_bag:
+                        self.__groceries.drop_bag(*self.__chef.get_position())
+                        self.__held_bag = False
 
             if event.type in {pg.KEYDOWN, pg.KEYUP}:
                 self.__chef.handle_input(event, self.__fridge.is_open)

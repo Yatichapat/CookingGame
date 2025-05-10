@@ -499,6 +499,16 @@ class Plate:
         """Get the list of ingredients on the plate."""
         return self.__ingredients
 
+    def draw_at(self, screen, x, y):
+        """Draw the plate and its ingredients at the specified position."""
+        # Temporarily store the original position
+        original_position = self.__position
+        # Update position for drawing
+        self.__position = (x, y)
+        # Use the existing draw method
+        self.draw(screen)
+        # Restore the original position
+        self.__position = original_position
 
 class TrashBin:
     def __init__(self, x, y):

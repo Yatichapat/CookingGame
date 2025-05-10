@@ -32,9 +32,9 @@ python main.py
 ```
 
 ## About the Gameplay
-### This game only pressing the enter key and e key
 - ingredients are contained in fridge. Press e to open the fridge and add ingredients to the cooking pan by pressing the 
   enter key
+- To drop item, you can press shift on both side
 - Wait for the food to be cooked. The cooking time will show on the green bar above the pan.
 - Once it's done, you can take the food out of the pan and put it on the plate by pressing enter key
 - You can also put the food back in the pan, in the fridge or throw it away.
