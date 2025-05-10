@@ -1,4 +1,4 @@
-# Apocalypse Cooker
+# 🧟 Apocalypse Cooker
 
 ## 🚀Installation instruction
 ### 1.  Clone the repository

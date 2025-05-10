@@ -1,5 +1,4 @@
 import pygame as pg
-import os
 
 
 class Config:
@@ -23,7 +22,6 @@ class Config:
         'PASTEL_GRAY': (220, 220, 213),
         'BACKGROUND': (249, 234, 211),
         'CHARACTER_SIZE': 100,
-        'MESSAGE_BACKGROUND': pg.transform.scale(pg.image.load("images/message.png"),(200, 200)),
 
         "paper bag": "images/paperbag.png",
         "red button": "images/red_button.png",
