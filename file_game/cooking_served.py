@@ -1,6 +1,4 @@
-import pygame as pg
 from file_game.cooking_config import *
-import math
 
 
 class Serving:
@@ -79,34 +77,6 @@ class Serving:
                 text_surface,
                 (self.__position[0] + 5, self.__position[1] - y_offset)
             )
-
-    # def calculate_score(self, plate):
-    #     """More sophisticated scoring considering combinations"""
-    #     ingredients = [ing.get_type() for ing in plate.get_ingredients()]
-    #     base_score = 0
-    #     bonus = 1.0
-    #
-    #     # Base values
-    #     type_values = {
-    #         'fried': 10,
-    #         'sliced': 7,
-    #         'raw': 3
-    #     }
-    #
-    #     # Combination bonuses
-    #     if 'chicken' in ingredients and 'egg' in ingredients:
-    #         bonus *= 1.5
-    #     if len(ingredients) >= 3:
-    #         bonus *= 1.3
-    #
-    #     # Calculate total
-    #     for ing in ingredients:
-    #         for type_, value in type_values.items():
-    #             if type_ in ing:
-    #                 base_score += value
-    #                 break
-    #
-    #     return int(base_score * bonus)
 
     def get_position(self):
         return self.__position

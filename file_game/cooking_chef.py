@@ -50,7 +50,6 @@ class Chef:
             pg.K_d: 0  # RIGHT
         }
         self.__last_log_time = time.time()
-        self.__dish_start_time = None
 
     def reset(self):
         self.__position = (Config.get_config('WIN_SIZE_W') // 2, Config.get_config('WIN_SIZE_H') // 2)
@@ -65,8 +64,6 @@ class Chef:
             self.__key_states[key] = False
             self.__key_initial_press[key] = False
             self.__keystrokes[key] = 0
-
-        self.__dish_start_time = None
 
     def draw(self):
         if self.__screen:
@@ -89,7 +86,8 @@ class Chef:
 
         # Keep the chef inside the screen boundaries
         self.__chef_rect.x = max(220, min(self.__chef_rect.x, Config.get_config('WIN_SIZE_W') - 100))
-        self.__chef_rect.y = max(100, min(self.__chef_rect.y, Config.get_config('WIN_SIZE_H') - Config.get_config('GRID_SIZE_H')))
+        self.__chef_rect.y = max(100, min(self.__chef_rect.y, Config.get_config('WIN_SIZE_H') -
+                                          Config.get_config('GRID_SIZE_H')))
 
         self.__position = self.__chef_rect.topleft  # Update position after movement
 
@@ -158,16 +156,8 @@ class Chef:
         if self.__chef_health <= 0:
             GameUI.game_over = True
 
-    def heal(self, amount):
-        self.__chef_health = min(self.__max_health, self.__chef_health + amount)
-
     def get_rect(self):
         return self.__chef_rect
-
-    def pick_up_plate(self, plate):
-        """Pick up a plate and its ingredients."""
-        if not self.__held_plate:
-            self.__held_plate = plate
 
     def save_keystrokes_to_csv(self):
         """Save keystrokes to a CSV file with timestamp and movement data.

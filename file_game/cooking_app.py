@@ -1,6 +1,5 @@
 from file_game.cooking_chef import Chef
 from file_game.cooking_zombie import Zombie
-from file_game.cooking_menu import *
 from file_game.cooking_served import Serving
 from file_game.cooking_ui import *
 from file_game.cooking_tool import *
@@ -21,7 +20,6 @@ class GameApp:
 
         self.__fridge = Fridge(190, 30, self.__chef)
         self.__pan = Pan(500, 38)
-        # self.__pot = Pot(800, 30)
         self.__plate = Plate(600, 50)
         self.__cutting_board = CuttingBoard(700, 50)
         self.__trash = TrashBin(270, 70)
@@ -40,9 +38,6 @@ class GameApp:
         self.__clock = pg.time.Clock()
         self.__game_ui = GameUI()
 
-        self.__restart_button_rect = None
-        self.__exit_button_rect = None
-
         self.__running = True
         self.__start_game = False
 
@@ -50,17 +45,12 @@ class GameApp:
         self.__serving = Serving(945, 150, self.__screen, self.__menu)
         self.__groceries = Groceries(self.__screen)
 
-        self.movement = {'UP': False, 'DOWN': False, 'LEFT': False, 'RIGHT': False}
         self.__final_score = 0
-
-        self.__orders_complete_this_session = 0
-        self.__all_sessions_order = []
 
     def handle_events(self):
         """Handle user input"""
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                self.__chef.save_keystrokes_to_csv()
                 self.__running = False
 
             elif event.type == pg.KEYDOWN:

@@ -15,8 +15,8 @@ class Menu:
     def __init__(self, max_orders=3):
         self.__font_menu = pg.font.Font(None, 14)
         self.__font_score = pg.font.Font(None, 42)
-        self.orders = deque()
-        self.max_orders = max_orders
+        self.__orders = deque()
+        self.__max_orders = max_orders
         self.__serving_pad = None
         self.__score = 0
 
@@ -36,8 +36,6 @@ class Menu:
         }
         self.__csv_file = "game_data/total_time_per_dish.csv"
         self.__session_id = self.__get_next_session_id()
-
-        self.__session_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def __get_next_session_id(self):
         if not os.path.exists(self.__csv_file):
@@ -64,7 +62,7 @@ class Menu:
 
     def serve_dish(self, plate):
         """Check if plate matches any order and calculate score"""
-        if not self.orders:
+        if not self.__orders:
             self.log_mistake("no_orders", "No orders available")
             return 0
 
@@ -81,7 +79,7 @@ class Menu:
             return 0
 
         # Process matching order
-        for order in list(self.orders):
+        for order in list(self.__orders):
             if order["name"] == prepared_type:
                 # Calculate points
                 current_time = pg.time.get_ticks()
@@ -97,7 +95,7 @@ class Menu:
                 })
 
                 # Remove fulfilled order
-                self.orders.remove(order)
+                self.__orders.remove(order)
 
                 # Track successful order
                 self.__successful_orders[prepared_type] += 1
@@ -114,7 +112,7 @@ class Menu:
 
     def reset(self):
         """Save session data before resetting"""
-        self.orders = deque()
+        self.__orders = deque()
         self.__score = 0
         self.__menu_appearance = {item: 0 for item in self.__MENU_ITEMS}
         self.__successful_orders = {item: 0 for item in self.__MENU_ITEMS}
@@ -127,7 +125,7 @@ class Menu:
 
     def add_order(self):
         """Add a new random menu item to the queue."""
-        if len(self.orders) < self.max_orders:
+        if len(self.__orders) < self.__max_orders:
             menu_item = random.choice(self.__MENU_ITEMS)
             self.__menu_appearance[menu_item] += 1  # Track order appearance
 
@@ -135,19 +133,19 @@ class Menu:
                 "name": menu_item,
                 "start_time": pg.time.get_ticks(),
                 "duration": 60000,  # 60 seconds to complete
-                "position": (800 - len(self.orders) * 150, 450)
+                "position": (800 - len(self.__orders) * 150, 450)
             }
-            self.orders.append(order)
+            self.__orders.append(order)
 
     def update(self):
         """Remove expired orders and add new ones"""
         current_time = pg.time.get_ticks()
-        while self.orders and current_time - self.orders[0]["start_time"] >= self.orders[0]["duration"]:
-            self.orders.popleft()  # Remove expired order
+        while self.__orders and current_time - self.__orders[0]["start_time"] >= self.__orders[0]["duration"]:
+            self.__orders.popleft()  # Remove expired order
             if not GameUI.game_over:
                 self.__score -= 5  # Penalty for expired order
 
-        if len(self.orders) < self.max_orders and random.random() < 0.05:
+        if len(self.__orders) < self.__max_orders and random.random() < 0.05:
             self.add_order()
 
     def draw_score(self, screen):
@@ -162,7 +160,7 @@ class Menu:
         """Render the menu orders."""
         current_time = pg.time.get_ticks()
 
-        for i, order in enumerate(self.orders):
+        for i, order in enumerate(self.__orders):
             rect_x = 800 - i * 250  # Move each order left
             rect_y = 460
             order_width = 150

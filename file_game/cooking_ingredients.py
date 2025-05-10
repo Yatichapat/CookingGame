@@ -29,10 +29,3 @@ class Ingredients:
     def draw_at(self, screen, x, y):
         """Draw ingredient at a specific position (e.g., inside the fridge)."""
         screen.blit(self.images, (x, y))  # Directly use self.__image to draw
-
-    def increment_usage(self):
-        self.__time_used += 1
-        return self.__time_used
-
-    def get_usage_count(self):
-        return self.__time_used

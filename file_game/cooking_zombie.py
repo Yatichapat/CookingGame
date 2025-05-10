@@ -6,10 +6,9 @@ import random
 class Zombie:
     def __init__(self, delay_time=3000):
         self.__position = (self.spawn_offscreen(Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))
-        self.screen = None
 
         self.__image = pg.transform.scale(pg.image.load("images/Zombie_1/Walk_still.png"), (30,70))
-        self.zombie_rect = self.__image.get_rect(topleft=self.__position)
+        self.__zombie_rect = self.__image.get_rect(topleft=self.__position)
         self.__speed = 2
         self.__chasing = False
         self.__last_attack_time = 0
@@ -21,7 +20,7 @@ class Zombie:
         self.__position = (self.spawn_offscreen(Config.get_config('WIN_SIZE_W'), Config.get_config('WIN_SIZE_H')))
         self.__speed = 2
         self.__chasing = False
-        self.zombie_rect = self.__image.get_rect(topleft=self.__position)
+        self.__zombie_rect = self.__image.get_rect(topleft=self.__position)
 
         self.__spawn_time = pg.time.get_ticks()
         self.__delay_time = 3000
@@ -42,8 +41,8 @@ class Zombie:
     def move_towards(self, target_x, target_y):
         """Move towards a given (x, y) target."""
 
-        dx = target_x - self.zombie_rect.x
-        dy = target_y - self.zombie_rect.y
+        dx = target_x - self.__zombie_rect.x
+        dy = target_y - self.__zombie_rect.y
         distance = max(0.1, (dx**2 + dy**2) ** 0.5)  # Prevent division by zero
 
         # Normalize direction and apply speed
@@ -51,9 +50,9 @@ class Zombie:
         if current_time - self.__spawn_time < self.__delay_time:
             return
 
-        self.zombie_rect.x += self.__speed * (dx / distance)
-        self.zombie_rect.y += self.__speed * (dy / distance)
-        self.__position = (self.zombie_rect.x, self.zombie_rect.y)
+        self.__zombie_rect.x += self.__speed * (dx / distance)
+        self.__zombie_rect.y += self.__speed * (dy / distance)
+        self.__position = (self.__zombie_rect.x, self.__zombie_rect.y)
 
     def chase_player(self, player):
         """Make the zombie chase the player."""
@@ -65,7 +64,7 @@ class Zombie:
     def attack(self, player):
         current_time = pg.time.get_ticks()
         if current_time - self.__last_attack_time >= 1000:
-            if self.zombie_rect.colliderect(player.get_rect()):
+            if self.__zombie_rect.colliderect(player.get_rect()):
                 player.take_damage(10)
                 self.__last_attack_time = current_time
                 return True
@@ -80,4 +79,4 @@ class Zombie:
 
     def draw(self):
         if self.screen:
-            self.screen.blit(self.__image, self.zombie_rect)
+            self.screen.blit(self.__image, self.__zombie_rect)

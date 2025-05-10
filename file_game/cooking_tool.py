@@ -9,7 +9,6 @@ from datetime import datetime
 
 class Fridge:
     def __init__(self, x, y, chef):
-        chef_x, chef_y = chef.get_position()
         self.__position = (x, y)
         self.__ingredients = {}
         self.__selected_ingredient = None
@@ -402,17 +401,6 @@ class Pan(Equipments):
         return self.cook_ingredients()  # Adjust frying logic if needed
 
     def put_ingredient_in_pan(self, ingredient):
-        self.add_ingredient(ingredient)
-
-
-class Pot(Equipments):
-    def __init__(self, x, y):
-        super().__init__(x, y, "images/pot.png")
-
-    def boil_ingredients(self):
-        return self.cook_ingredients()  # Adjust boiling logic if needed
-
-    def put_ingredient_in_pot(self, ingredient):
         self.add_ingredient(ingredient)
 
 
