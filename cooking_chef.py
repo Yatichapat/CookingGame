@@ -175,7 +175,7 @@ class Chef:
         Creates a new file if it doesn't exist, or appends to existing file.
         Logs only when the specified time interval has passed.
         """
-        filename = "keystroke_per_dish.csv"
+        filename = "game_data/keystroke_per_dish.csv"
         try:
             current = datetime.now()
             file_exists = os.path.exists(filename)

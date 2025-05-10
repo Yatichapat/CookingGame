@@ -186,7 +186,7 @@ class Menu:
                          border_radius=4)
 
     def save_to_mistake(self):
-        file_name = "mistake.csv"
+        file_name = "game_data/mistake.csv"
         try:
             file_exist = os.path.exists(file_name)
 
@@ -213,7 +213,7 @@ class Menu:
         if not force_save:
             return
 
-        filename = "order_per_session.csv"
+        filename = "game_data/order_per_session.csv"
         try:
             file_exists = os.path.exists(filename)
 
@@ -241,7 +241,7 @@ class Menu:
             print(f"Error saving menu statistics: {e}")
 
     def save_to_time_per_dish(self):
-        file_name = "total_time_per_dish.csv"
+        file_name = "game_data/total_time_per_dish.csv"
         try:
             file_exist = os.path.exists(file_name)
 

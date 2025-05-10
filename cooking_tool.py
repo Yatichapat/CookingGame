@@ -18,7 +18,7 @@ class Fridge:
         self.__dropped_ingredients = []
         self.__select_index = 0
         self.__usage_data = []  # Stores ingredient usage records
-        self.__csv_file = "ingredient_used.csv"
+        self.__csv_file = "game_data/ingredient_used.csv"
         self.__initialize_csv()
         self.__session_id = self.__get_next_session_id()
 

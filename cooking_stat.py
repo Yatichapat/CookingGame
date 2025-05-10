@@ -53,7 +53,7 @@ class StatsWindow:
         canvas.configure(yscrollcommand=scrollbar.set)
 
         content_frame = ttk.Frame(canvas)
-        canvas.create_window((0, 0), window=content_frame, anchor="nw")
+        window_id = canvas.create_window((0, 0), window=content_frame, anchor="nw")
 
         # Title
         ttk.Label(content_frame,
@@ -62,10 +62,11 @@ class StatsWindow:
 
         try:
             # Load all relevant data
-            order_df = pd.read_csv('order_per_session.csv') if os.path.exists('order_per_session.csv') else None
-            mistake_df = pd.read_csv('mistake.csv') if os.path.exists('mistake.csv') else None
-            ingredient_df = pd.read_csv('ingredient_used.csv') if os.path.exists('ingredient_used.csv') else None
-            keystroke_df = pd.read_csv('keystroke_per_dish.csv') if os.path.exists('keystroke_per_dish.csv') else None
+            order_df = pd.read_csv('game_data/order_per_session.csv') if os.path.exists('game_data/order_per_session.csv') else None
+            mistake_df = pd.read_csv('game_data/mistake.csv') if os.path.exists('game_data/mistake.csv') else None
+            ingredient_df = pd.read_csv('game_data/ingredient_used.csv') if os.path.exists('game_data/ingredient_used.csv') else None
+            keystroke_df = pd.read_csv('game_data/keystroke_per_dish.csv') if os.path.exists('game_data/keystroke_per_dish.csv') else None
+
 
             # Calculate basic stats
             total_sessions = len(order_df)
@@ -149,8 +150,8 @@ class StatsWindow:
 
             # Mistake types (if available)
             ax3 = fig.add_subplot(gs[1, 0])
-            if mistake_df is not None and 'type' in mistake_df.columns:
-                mistake_counts = mistake_df['type'].value_counts()
+            if mistake_df is not None and 'mistake_type' in mistake_df.columns:
+                mistake_counts = mistake_df['mistake_type'].value_counts()
                 ax3.bar(mistake_counts.index, mistake_counts.values, color='salmon')
                 ax3.set_title('Mistake Types')
                 ax3.tick_params(axis='x', rotation=45)
@@ -161,10 +162,11 @@ class StatsWindow:
             # Keystroke distribution (if available)
             ax4 = fig.add_subplot(gs[1, 1])
             if keystroke_df is not None and all(col in keystroke_df.columns for col in ['up', 'down', 'left', 'right']):
-                keystroke_cols = ['up', 'down', 'left', 'right']
-                keystroke_totals = keystroke_df[keystroke_cols].sum()
-                ax4.pie(keystroke_totals, labels=keystroke_totals.index, autopct='%1.1f%%')
-                ax4.set_title('Keystroke Distribution')
+                keystroke_cols = [col for col in ['up', 'down', 'left', 'right'] if col in keystroke_df.columns]
+                if keystroke_cols:
+                    keystroke_totals = keystroke_df[keystroke_cols].sum()
+                    ax4.pie(keystroke_totals, labels=keystroke_totals.index, autopct='%1.1f%%')
+                    ax4.set_title('Keystroke Distribution')
             else:
                 ax4.text(0.5, 0.5, 'No keystroke data', ha='center', va='center')
                 ax4.set_axis_off()
@@ -176,24 +178,10 @@ class StatsWindow:
             chart_canvas.draw()
             chart_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        except Exception as e:
-            error_msg = f"Error loading data: {str(e)}\n\nAvailable columns in order_per_session.csv:\n"
-            try:
-                if os.path.exists('order_per_session.csv'):
-                    test_df = pd.read_csv('order_per_session.csv')
-                    error_msg += f"{', '.join(test_df.columns)}"
-            except:
-                error_msg += "Could not read file"
-
-            ttk.Label(content_frame,
-                      text=error_msg,
-                      foreground="red",
-                      wraplength=800).pack()
-
             # Update scroll region
             def on_configure(event):
                 canvas.configure(scrollregion=canvas.bbox("all"))
-                canvas.itemconfig(1, width=event.width)
+                canvas.itemconfig(window_id, width=canvas.winfo_width())
 
             content_frame.bind("<Configure>", on_configure)
 
@@ -206,6 +194,21 @@ class StatsWindow:
 
             bind_mousewheel(content_frame)
             bind_mousewheel(chart_canvas.get_tk_widget())
+
+        except Exception as e:
+            error_msg = f"Error loading data: {str(e)}\n\nAvailable columns in order_per_session.csv:\n"
+            try:
+                if os.path.exists('order_per_session.csv'):
+                    test_df = pd.read_csv('order_per_session.csv')
+                    error_msg += f"{', '.join(test_df.columns)}"
+            except:
+                error_msg += "Could not read file"
+                ttk.Label(content_frame,
+                          text=error_msg,
+                          foreground="red",
+                          wraplength=800).pack()
+
+
 
     def load_stats(self):
         # Placeholder for loading stats logic
@@ -233,7 +236,7 @@ class StatsWindow:
         scrollable_frame = ttk.Frame(canvas)
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-        df = pd.read_csv('keystroke_per_dish.csv', skipinitialspace=True)
+        df = pd.read_csv('game_data/keystroke_per_dish.csv', skipinitialspace=True)
         x = range(1, len(df) + 1)
 
         # Create figure with custom grid layout
@@ -381,7 +384,7 @@ class StatsWindow:
         label.pack(pady=20)
 
         # Load CSV
-        df = pd.read_csv('order_per_session.csv', skipinitialspace=True, on_bad_lines='skip')
+        df = pd.read_csv('game_data/order_per_session.csv', skipinitialspace=True, on_bad_lines='skip')
 
         # Convert timestamps
         df['session_start'] = pd.to_datetime(df['session_start'])
@@ -468,14 +471,6 @@ class StatsWindow:
         # Create window in canvas for the scrollable frame
         window_id = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-        # Bind the frame's configure event to update the scrollregion
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-
         # Mousewheel scrolling
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -487,7 +482,7 @@ class StatsWindow:
         label.pack(pady=20)
 
         try:
-            df = pd.read_csv('mistake.csv', skipinitialspace=True)
+            df = pd.read_csv('game_data/mistake.csv', skipinitialspace=True)
 
             # Group by mistake type and count occurrences
             mistake_counts = df['mistake_type'].value_counts()
@@ -580,6 +575,9 @@ class StatsWindow:
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text='Ingredients Used')
 
+        tab.rowconfigure(0, weight=1)
+        tab.columnconfigure(0, weight=1)
+
         # Create a canvas and scrollbar for the entire tab
         canvas = tk.Canvas(tab)
         scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
@@ -598,7 +596,7 @@ class StatsWindow:
         label.pack(pady=10)
 
         try:
-            df = pd.read_csv('ingredient_used.csv', skipinitialspace=True)
+            df = pd.read_csv('game_data/ingredient_used.csv', skipinitialspace=True)
 
             # Filter only 'Taken'
             taken_df = df[df['action'].str.lower() == 'taken']
@@ -732,12 +730,7 @@ class StatsWindow:
             def _on_mousewheel(event):
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-            def bind_mousewheel(widget):
-                widget.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
-                widget.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
-
-            bind_mousewheel(scrollable_frame)
-            bind_mousewheel(canvas_pie.get_tk_widget())
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
         except FileNotFoundError:
             ttk.Label(scrollable_frame, text="Error: File 'ingredient_used.csv' not found.").pack(pady=10)
@@ -772,7 +765,7 @@ class StatsWindow:
                   font=("Arial", 16, "bold")).pack(pady=20)
 
         try:
-            df = pd.read_csv("total_time_per_dish.csv")
+            df = pd.read_csv("game_data/total_time_per_dish.csv")
 
             if df.empty:
                 ttk.Label(content_frame, text="No preparation time data available").pack()
@@ -873,6 +866,7 @@ class StatsWindow:
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
             canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            content_frame.bind_all("<MouseWheel>", _on_mousewheel)
 
         except Exception as e:
             ttk.Label(content_frame, text=f"Error loading data: {str(e)}").pack()
