@@ -507,3 +507,12 @@ session_id, id, timestamp, ingredient, action, quantity
 129,2,2025-05-11 00:13:12,egg,Taken,1
 129,3,2025-05-11 00:13:34,egg,Taken,1
 129,4,2025-05-11 00:13:43,chicken,Taken,1
+130,1,2025-05-11 10:16:59,fish,Taken,1
+130,2,2025-05-11 10:17:19,egg,Taken,1
+131,1,2025-05-11 13:11:29,bread,Taken,1
+131,2,2025-05-11 13:11:36,tomato,Taken,1
+131,3,2025-05-11 13:11:43,cheese,Taken,1
+131,4,2025-05-11 13:11:51,lettuce,Taken,1
+131,5,2025-05-11 13:12:06,egg,Taken,1
+131,6,2025-05-11 13:12:16,pork,Taken,1
+131,7,2025-05-11 13:12:30,chicken,Taken,1

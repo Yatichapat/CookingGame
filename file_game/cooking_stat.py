@@ -298,7 +298,7 @@ class StatsWindow:
         table_container = ttk.Frame(scrollable_frame)
         table_container.pack(fill=tk.BOTH, expand=True, pady=(10, 20), padx=10)
 
-        ttk.Label(table_container, text="Full Order Complete History", font=('Helvetica', 10, 'bold')).pack(
+        ttk.Label(table_container, text="Full Keystrokes Complete History", font=('Helvetica', 10, 'bold')).pack(
             pady=(10, 5))
 
         table_frame = ttk.Frame(table_container)
